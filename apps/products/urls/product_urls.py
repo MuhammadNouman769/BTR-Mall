@@ -8,9 +8,9 @@ from apps.products.views.product.delete import ProductDeleteAPIView
 
 
 urlpatterns = [
-    path("create/", ProductCreateAPIView.as_view()),
-    path("list/", ProductListAPIView.as_view()),
-    path("<int:id>/", ProductDetailAPIView.as_view()),
-    path("<int:id>/update/", ProductUpdateAPIView.as_view()),
-    path("<int:id>/delete/", ProductDeleteAPIView.as_view()),
+    path("products/create/", ProductCreateAPIView.as_view()),
+    path("products/list/", ProductListAPIView.as_view()),
+    path("products/<int:id>/", ProductDetailAPIView.as_view()),
+    path("products/<int:id>/update/", ProductUpdateAPIView.as_view()),
+    path("products/<int:id>/delete/", ProductDeleteAPIView.as_view()),
 ]

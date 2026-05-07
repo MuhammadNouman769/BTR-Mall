@@ -9,9 +9,9 @@ from apps.products.views.shop.delete import ShopDeleteAPIView
 
 
 urlpatterns = [
-    path("create/", ShopCreateAPIView.as_view()),
-    path("list/", ShopListAPIView.as_view()),
-    path("<int:id>/", ShopDetailAPIView.as_view()),
-    path("<int:id>/update/", ShopUpdateAPIView.as_view()),
-    path("<int:id>/delete/", ShopDeleteAPIView.as_view()),
+    path("shops/create/", ShopCreateAPIView.as_view()),
+    path("shops/list/", ShopListAPIView.as_view()),
+    path("shops/<int:id>/", ShopDetailAPIView.as_view()),
+    path("shops/<int:id>/update/", ShopUpdateAPIView.as_view()),
+    path("shops/<int:id>/delete/", ShopDeleteAPIView.as_view()),
 ]

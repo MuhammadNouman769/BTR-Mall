@@ -13,12 +13,30 @@ class ProductVariant(BaseModel):
     sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
     barcode = models.CharField(max_length=100, unique=True, null=True, blank=True)
 
-    option1 = models.ForeignKey(ProductOptionValue, on_delete=models.CASCADE, null=True, blank=True, related_name="variants_option1")
-    option2 = models.ForeignKey(ProductOptionValue, on_delete=models.CASCADE, null=True, blank=True, related_name="variants_option2")
-    option3 = models.ForeignKey(ProductOptionValue, on_delete=models.CASCADE, null=True, blank=True, related_name="variants_option3")
+    option1 = models.ForeignKey(
+        ProductOptionValue,
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name="variants_option1"
+    )
+    option2 = models.ForeignKey(
+        ProductOptionValue,
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name="variants_option2"
+    )
+    option3 = models.ForeignKey(
+        ProductOptionValue,
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name="variants_option3"
+    )
 
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    compare_at_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    compare_at_price = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        null=True, blank=True
+    )
 
     stock_quantity = models.PositiveIntegerField(default=0)
     track_inventory = models.BooleanField(default=False)

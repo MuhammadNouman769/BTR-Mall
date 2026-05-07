@@ -1,27 +1,16 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from apps.products.selectors.variant_selector import VariantSelector
-
-from apps.products.serializers.response.variant_response import (
-    ProductVariantResponseSerializer
-)
-
-from apps.products.schemas.variant.list_schema import (
-    variant_list_schema
-)
+from apps.products.serializers.response.option_response import ProductOptionResponseSerializer
+from apps.products.selectors.option_selector import ProductOptionSelector
+from apps.products.schemas.option.list_schema import option_list_schema
 
 
-class VariantListAPIView(APIView):
+class OptionListAPIView(APIView):
 
-    @variant_list_schema
+    @option_list_schema
     def get(self, request):
-
-        variants = VariantSelector.list_variants()
-
-        serializer = ProductVariantResponseSerializer(
-            variants,
-            many=True
-        )
+        options = ProductOptionSelector.list()
+        serializer = ProductOptionResponseSerializer(options, many=True)
 
         return Response(serializer.data)

@@ -1,20 +1,8 @@
 from drf_spectacular.utils import extend_schema
-
-from apps.products.serializers.request.variant_request import (
-    ProductVariantCreateSerializer
-)
-
-from apps.products.serializers.response.variant_response import (
-    ProductVariantResponseSerializer
-)
+from apps.products.serializers.request.option_request import ProductOptionCreateSerializer
 
 
-variant_update_schema = extend_schema(
-    summary="Update Variant",
-
-    request=ProductVariantCreateSerializer,
-
-    responses=ProductVariantResponseSerializer,
-
-    tags=["Variants"]
+option_update_schema = extend_schema(
+    request=ProductOptionCreateSerializer,
+    responses={200: {"message": "Option updated successfully"}}
 )

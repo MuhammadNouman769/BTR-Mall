@@ -1,74 +1,16 @@
-from rest_framework import serializers
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-from apps.products.models import (
-    ProductVariant,
-    VariantImage
-)
-
-
-class VariantImageSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = VariantImage
-        fields = [
-            "id",
-            "image",
-            "alt_text",
-            "is_main",
-            "position",
-        ]
+from apps.products.models import ProductOption
+from apps.products.services.option_service import ProductOptionService
+from apps.products.schemas.option.delete_schema import option_delete_schema
 
 
-class ProductVariantCreateSerializer(serializers.ModelSerializer):
+class OptionDeleteAPIView(APIView):
 
-    variant_images = VariantImageSerializer(
-        many=True,
-        required=False
-    )
+    @option_delete_schema
+    def delete(self, request, pk):
+        option = ProductOption.objects.get(pk=pk)
+        ProductOptionService.delete_option(option)
 
-    class Meta:
-        model = ProductVariant
-        fields = [
-            "id",
-            "product",
-
-            "sku",
-            "barcode",
-
-            "option1",
-            "option2",
-            "option3",
-
-            "price",
-            "compare_at_price",
-
-            "stock_quantity",
-            "track_inventory",
-            "allow_backorder",
-
-            "position",
-
-            "variant_images",
-        ]
-
-    def create(self, validated_data):
-        images = validated_data.pop("variant_images", [])
-
-        variant = ProductVariant.objects.create(**validated_data)
-
-        for image in images:
-            VariantImage.objects.create(
-                variant=variant,
-                **image
-            )
-
-        return variant
-
-    def update(self, instance, validated_data):
-        validated_data.pop("variant_images", None)
-
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-        return instance
+        return Response({"message": "Option deleted successfully"})

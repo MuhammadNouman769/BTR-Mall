@@ -1,14 +1,7 @@
 from drf_spectacular.utils import extend_schema
-
-from apps.products.serializers.response.variant_response import (
-    ProductVariantResponseSerializer
-)
+from apps.products.serializers.response.option_response import ProductOptionResponseSerializer
 
 
-variant_list_schema = extend_schema(
-    summary="List Product Variants",
-
-    responses=ProductVariantResponseSerializer(many=True),
-
-    tags=["Variants"]
+option_list_schema = extend_schema(
+    responses=ProductOptionResponseSerializer(many=True)
 )
