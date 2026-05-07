@@ -15,4 +15,4 @@ class ShopListAPIView(ListAPIView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        return ShopSelector.all_shops()
+        return ShopSelector.list_shops()

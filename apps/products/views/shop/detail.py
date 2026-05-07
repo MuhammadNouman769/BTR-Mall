@@ -10,4 +10,3 @@ from drf_spectacular.utils import extend_schema_view
 class ShopDetailAPIView(RetrieveAPIView):
     queryset = Shop.objects.all()
     serializer_class = ShopDetailSerializer
-    lookup_field = "id"

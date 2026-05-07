@@ -12,13 +12,12 @@ from drf_spectacular.utils import extend_schema
 
 @extend_schema(request=ShopUpdateSerializer, responses=ShopDetailSerializer)
 class ShopUpdateAPIView(APIView):
+    
     permission_classes = [IsAuthenticated]
-    serializer_class = ShopUpdateSerializer
-
-    #  IMPORTANT for file upload
     parser_classes = [MultiPartParser, FormParser]
 
-    def patch(self, request):
+    def patch(self, request, *args, **kwargs):
+
         try:
             shop = request.user.shop
         except Shop.DoesNotExist:
