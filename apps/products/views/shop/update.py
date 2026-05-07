@@ -1,18 +1,39 @@
-from rest_framework.generics import UpdateAPIView
-from apps.products.models import Shop
-from apps.products.serializers.request.shop_request import ShopCreateSerializer
-from apps.products.schemas.shop.update_schema import shop_update_schema
-
-from drf_spectacular.utils import extend_schema_view
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 
+from apps.products.models import Shop
+from apps.products.services.shop_service import ShopService
+from apps.products.serializers.request.shop_update import ShopUpdateSerializer
+from apps.products.serializers.response.shop_response import ShopDetailSerializer
 
-@extend_schema_view(put=shop_update_schema, patch=shop_update_schema)
-class ShopUpdateAPIView(UpdateAPIView):
-    queryset = Shop.objects.all()
-    serializer_class = ShopCreateSerializer
-    lookup_field = "id"
+from drf_spectacular.utils import extend_schema
+
+@extend_schema(request=ShopUpdateSerializer, responses=ShopDetailSerializer)
+class ShopUpdateAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = ShopUpdateSerializer
 
-    def get_queryset(self):
-        return Shop.objects.filter(owner=self.request.user)
+    #  IMPORTANT for file upload
+    parser_classes = [MultiPartParser, FormParser]
+
+    def patch(self, request):
+        try:
+            shop = request.user.shop
+        except Shop.DoesNotExist:
+            return Response({"error": "Shop not found"}, status=404)
+
+        serializer = ShopUpdateSerializer(
+            shop,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+
+        shop = ShopService.update_shop(shop, serializer.validated_data)
+
+        return Response({
+            "message": "Shop updated successfully",
+            "data": ShopDetailSerializer(shop).data
+        })
