@@ -15,7 +15,6 @@ from apps.products.serializers.response.shop_response import ShopDetailSerialize
 class ShopDeleteAPIView(DestroyAPIView):
     queryset = Shop.objects.all()
     serializer_class = ShopDetailSerializer
-    lookup_field = "id"
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):

@@ -8,9 +8,9 @@ from apps.products.views.category.delete import CategoryDeleteAPIView
 
 
 urlpatterns = [
-    path("categories/", CategoryListAPIView.as_view()),
-    path("categories/create/", CategoryCreateAPIView.as_view()),
-    path("categories/<int:pk>/", CategoryDetailAPIView.as_view()),
-    path("categories/<int:pk>/update/", CategoryUpdateAPIView.as_view()),
-    path("categories/<int:pk>/delete/", CategoryDeleteAPIView.as_view()),
+    path("", CategoryListAPIView.as_view()),
+    path("create/", CategoryCreateAPIView.as_view()),
+    path("<int:pk>/", CategoryDetailAPIView.as_view()),
+    path("<int:pk>/update/", CategoryUpdateAPIView.as_view()),
+    path("<int:pk>/delete/", CategoryDeleteAPIView.as_view()),
 ]

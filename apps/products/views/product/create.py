@@ -29,7 +29,7 @@ class ProductCreateAPIView(APIView):
         validated_data = serializer.validated_data
         validated_data['shop'] = request.user.shop  # Assuming user has a shop field
 
-        product = ProductService.create_product(validated_data)
+        product = ProductService.create_product(request.user, validated_data)
 
         return Response({
             "message": "Product created successfully",

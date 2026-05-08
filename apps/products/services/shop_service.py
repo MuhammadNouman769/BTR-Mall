@@ -1,3 +1,5 @@
+from django.db import IntegrityError, transaction
+
 from apps.products.models import Shop
 from apps.common.enums import ShopStatusChoices, UserRoleChoices
 from rest_framework.exceptions import ValidationError
@@ -19,17 +21,25 @@ class ShopService:
             })
 
         # prevent duplicate shop
-        if Shop.objects.filter(owner=user).exists():
+        if Shop.all_objects.filter(owner=user).exists():
             raise ValidationError({
                 "error": "You already have a shop"
             })
 
-        shop = Shop.objects.create(
-            owner=user,
-            shop_status=ShopStatusChoices.PENDING,
-            is_verified=False,
-            **validated_data
-        )
+        try:
+            with transaction.atomic():
+                shop = Shop.objects.create(
+                    owner=user,
+                    shop_status=ShopStatusChoices.PENDING,
+                    is_verified=False,
+                    **validated_data
+                )
+        except IntegrityError as exc:
+            if "products_shop.owner_id" in str(exc) or "UNIQUE constraint failed" in str(exc):
+                raise ValidationError({
+                    "error": "You already have a shop"
+                })
+            raise
 
         return shop
 

@@ -7,22 +7,6 @@ from django.utils.text import slugify
 from apps.utils.models import SluggedModel
 from apps.common.enums import ShopStatusChoices
 
-"""
-=========================================================================
-1. SHOP MODEL IMPLEMENTATION
-   Usage: Represents a seller's shop with branding and verification
-      Features:
-        - Owner (ForeignKey to User model) - the user who owns the shop
-        - Name (CharField) - the name of the shop
-        - Handle (SlugField) - the handle of the shop
-        - Description (TextField) - the description of the shop
-
-        - Logo (ImageField) - the logo of the shop
-        - Banner (ImageField) - the banner of the shop
-        - Rating (DecimalField) - the rating of the shop
-        - Is verified (BooleanField) - whether the shop is verified
-=========================================================================
-"""
 
 class Shop(SluggedModel):
     owner = models.OneToOneField(
