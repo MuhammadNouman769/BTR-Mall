@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from apps.products.serializers.request.shop_request import ShopCreateSerializer
 from apps.products.services.shop_service import ShopService
@@ -16,7 +17,10 @@ from apps.common.enums import UserRoleChoices
 
 @extend_schema_view(post=shop_create_schema)
 class ShopCreateAPIView(APIView):
+
     permission_classes = [IsAuthenticated]
+
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         if request.user.role != UserRoleChoices.SELLER:
