@@ -42,7 +42,7 @@ urlpatterns = [
     path('api/shops/verification/', include('apps.products.urls.shop_verification_urls')),
 
     # Restore request system (seller → admin approval flow)
-    path('api/shops/restore/', include('apps.products.urls.seller_restore_request_urls')),
+    path('api/shops/restore-requests/', include('apps.products.urls.seller_restore_request_urls')),
 
     # ================= SYSTEMS =================
     path('api/inventory/', include('apps.inventory_tracking.urls')),

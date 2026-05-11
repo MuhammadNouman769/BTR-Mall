@@ -8,7 +8,7 @@ from apps.products.serializers.response.shop_response import ShopDetailSerialize
 from apps.products.serializers.response.shop_trash_response import ShopTrashSerializer
 
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from apps.products.schemas.admin.shop_trash_schema import (
+from apps.products.schemas.admin_aprrovel.shop_trash_schema import (
     shop_trash_schema
 )
 @extend_schema_view(

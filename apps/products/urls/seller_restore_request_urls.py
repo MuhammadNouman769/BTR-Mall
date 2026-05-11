@@ -1,5 +1,5 @@
 from django.urls import path
-from apps.products.views.admin.shop_seller_restore import ShopRestoreRequestAPIView
+from apps.products.views.seller_request.shop_seller_restore import ShopRestoreRequestAPIView
 
 
 urlpatterns = [ 

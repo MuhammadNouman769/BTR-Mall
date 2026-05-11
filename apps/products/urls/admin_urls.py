@@ -1,11 +1,11 @@
 # admin_urls.py
 from django.urls import path
 
-from apps.products.views.admin.shop_trash_list import ShopTrashListAPIView
-from apps.products.views.admin.shop_hard_delete import AdminShopHardDeleteAPIView
-from apps.products.views.admin.shop_restore_approve import ApproveShopRestoreAPIView
-from apps.products.views.admin.shop_restore_request import ShopRestoreRequestListAPIView
-from apps.products.views.admin.shop_restore_request_detail import ShopRestoreRequestDetailAPIView
+from apps.products.views.admin_aprrovel.shop_trash_list import ShopTrashListAPIView
+from apps.products.views.admin_aprrovel.shop_hard_delete import AdminShopHardDeleteAPIView
+from apps.products.views.admin_aprrovel.shop_restore_approve import ApproveShopRestoreAPIView
+from apps.products.views.admin_aprrovel.shop_restore_request import ShopRestoreRequestListAPIView
+from apps.products.views.admin_aprrovel.shop_restore_request_detail import ShopRestoreRequestDetailAPIView
 
 urlpatterns = [
     # restore system

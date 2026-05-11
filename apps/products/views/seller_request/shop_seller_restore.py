@@ -23,7 +23,7 @@ from apps.products.services.shop_restore_service import (
     ShopRestoreService
 )
 
-from apps.products.schemas.admin.restore_request_schema import (
+from apps.products.schemas.seller_request.restore_request_schema import (
     shop_restore_request_schema
 )
 

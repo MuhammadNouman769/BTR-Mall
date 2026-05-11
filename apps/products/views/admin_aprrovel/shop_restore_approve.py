@@ -16,7 +16,7 @@ from apps.products.serializers.response.shop_restore_response import (
     ShopRestoreResponseSerializer
 )
 
-from apps.products.schemas.admin.restore_approve_schema import (
+from apps.products.schemas.admin_aprrovel.restore_approve_schema import (
     shop_restore_approve_schema
 )
 

@@ -6,7 +6,7 @@ from apps.products.models import Shop
 from apps.products.serializers.response.shop_hard_delete_response import ShopHardDeleteResponseSerializer
 
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from apps.products.schemas.admin.shop_hard_delete_schema import (
+from apps.products.schemas.admin_aprrovel.shop_hard_delete_schema import (
     shop_hard_delete_schema
 )
 @extend_schema_view(
