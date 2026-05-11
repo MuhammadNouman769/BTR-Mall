@@ -51,43 +51,43 @@ class ProductReviewService:
 
 
 
-@staticmethod
-@transaction.atomic
-def update_review(review, validated_data):
+    @staticmethod
+    @transaction.atomic
+    def update_review(review, validated_data):
 
-    new_images = validated_data.pop(
-        "new_images",
-        []
-    )
-
-    deleted_images = validated_data.pop(
-        "deleted_images",
-        []
-    )
-
-    for attr, value in validated_data.items():
-        setattr(review, attr, value)
-
-    review.save()
-
-    if deleted_images:
-        ProductReviewImage.objects.filter(
-            id__in=deleted_images,
-            review=review
-        ).delete()
-
-    new_image_objects = []
-
-    for image in new_images:
-        new_image_objects.append(
-            ProductReviewImage(
-                review=review,
-                image=image
-            )
+        new_images = validated_data.pop(
+            "new_images",
+            []
         )
 
-    ProductReviewImage.objects.bulk_create(
-        new_image_objects
-    )
+        deleted_images = validated_data.pop(
+            "deleted_images",
+            []
+        )
 
-    return review
+        for attr, value in validated_data.items():
+            setattr(review, attr, value)
+
+        review.save()
+
+        if deleted_images:
+            ProductReviewImage.objects.filter(
+                id__in=deleted_images,
+                review=review
+            ).delete()
+
+        new_image_objects = []
+
+        for image in new_images:
+            new_image_objects.append(
+                ProductReviewImage(
+                    review=review,
+                    image=image
+                )
+            )
+
+        ProductReviewImage.objects.bulk_create(
+            new_image_objects
+        )
+
+        return review

@@ -24,7 +24,7 @@ from apps.users.models.users import User
 =========================================================================
 """
 
-class ProductReview(OrderedModel, BaseModel):
+class ProductReview(OrderedModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews")
 
@@ -45,7 +45,7 @@ class ProductReview(OrderedModel, BaseModel):
 
 class ProductReviewImage(BaseModel):
     review = models.ForeignKey(ProductReview, on_delete=models.CASCADE, related_name="images")
-    variant_image = models.ForeignKey(VariantImage, on_delete=models.SET_NULL, null=True, blank=True)
+    image = models.ImageField(upload_to="reviews/%Y/%m/", null=True, blank=True)
 
     alt_text = models.CharField(max_length=255, blank=True)
 
