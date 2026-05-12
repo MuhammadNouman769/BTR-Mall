@@ -10,10 +10,10 @@ from apps.products.views.review.image_delete import ProductReviewImageDeleteAPIV
 
 urlpatterns = [
 
-    path("reviews/create/",ProductReviewCreateAPIView.as_view()),
-    path("reviews/",ProductReviewListAPIView.as_view()),
-    path("reviews/<int:id>/update/",ProductReviewUpdateAPIView.as_view()),
-    path("reviews/<int:id>/update/",ProductReviewUpdateAPIView.as_view()),
-    path("reviews/<int:id>/delete/",ProductReviewDeleteAPIView.as_view()),
-    path("review-images/<int:id>/delete/",ProductReviewImageDeleteAPIView.as_view()),
+    path("",ProductReviewListAPIView.as_view()),
+    path("create/",ProductReviewCreateAPIView.as_view()),
+    path("<int:id>/",ProductReviewDetailAPIView.as_view()),
+    path("<int:id>/update/",ProductReviewUpdateAPIView.as_view()),
+    path("<int:id>/delete/",ProductReviewDeleteAPIView.as_view()),
+    path("<int:id>/image-delete/",ProductReviewImageDeleteAPIView.as_view()),
 ]

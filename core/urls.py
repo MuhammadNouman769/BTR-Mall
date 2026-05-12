@@ -32,7 +32,7 @@ urlpatterns = [
     path('api/categories/', include('apps.products.urls.category_urls')),
     path('api/variants/', include('apps.products.urls.variant_urls')),
     path('api/options/', include('apps.products.urls.option_urls')),
-    path("api/product-reviews", include('apps.products.urls.review_urls')),
+    path("api/reviews", include('apps.products.urls.review_urls')),
 
     # ================= SHOP MODULES =================
 

@@ -26,16 +26,7 @@ class ProductOption(OrderedModel):
         return f"{self.product.title} - {self.name}"
 
 
-"""
-=========================================================================
-8. PRODUCT OPTION VALUE MODEL IMPLEMENTATION
-   Usage: Represents a value of an option
-   Features:
-        - Option (ForeignKey to ProductOption model) - the option that the value belongs to
-        - Value (CharField) - the value of the option
-        - Position (PositiveSmallIntegerField) - the position of the value
-=========================================================================
-"""
+""" ======================== PRODUCT OPTION VALUE MODEL ====================== """
 
 class ProductOptionValue(OrderedModel):
     option = models.ForeignKey(ProductOption, on_delete=models.CASCADE, related_name="values")

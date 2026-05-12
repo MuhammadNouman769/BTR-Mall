@@ -8,7 +8,7 @@ class VariantImageResponseSerializer(serializers.ModelSerializer):
         fields = ["id", "image", "alt_text", "is_main", "position"]
 
 
-class ProductVariantResponseSerializer(serializers.ModelSerializer):
+class ProductVariantResponseInProductSerializer(serializers.ModelSerializer):
     variant_name = serializers.CharField(source="get_variant_name", read_only=True)
     is_in_stock = serializers.BooleanField(read_only=True)
     variant_images = VariantImageResponseSerializer(many=True, read_only=True)

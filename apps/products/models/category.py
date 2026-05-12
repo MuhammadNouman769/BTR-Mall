@@ -4,18 +4,7 @@ from django.core.exceptions import ValidationError
 from apps.utils.models import OrderedModel, SluggedModel
 
 
-"""
-=========================================================================
-9. CATEGORY MODEL IMPLEMENTATION
-   Usage: Represents a category of a product
-   Features:
-        - Parent (ForeignKey to Category model) - the parent category of the category
-        - Name (CharField) - the name of the category
-        - Logo (ImageField) - the logo of the category
-        - Is visible (BooleanField) - whether the category is visible
-        - Position (PositiveSmallIntegerField) - the position of the category
-=========================================================================
-"""
+""" ============================== CATEGORY MODEL ============================ """
 
 class Category(OrderedModel, SluggedModel):
     parent = models.ForeignKey(

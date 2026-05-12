@@ -10,11 +10,14 @@ class CategoryService:
     @staticmethod
     @transaction.atomic
     def create(validated_data):
+
         parent = validated_data.get("parent")
 
-        #  Prevent self-parent (extra safety)
+        # Prevent self-parent
         if parent and parent.pk == validated_data.get("id"):
-            raise ValidationError("Category cannot be its own parent")
+            raise ValidationError({
+                "error": "Category cannot be its own parent"
+            })
 
         category = Category.objects.create(**validated_data)
 
@@ -24,30 +27,49 @@ class CategoryService:
     @staticmethod
     @transaction.atomic
     def update(instance, validated_data):
+
         parent = validated_data.get("parent", instance.parent)
 
-        #  Prevent self-parent
+        # Prevent self-parent
         if parent and parent == instance:
-            raise ValidationError("Category cannot be parent of itself")
+            raise ValidationError({
+                "error": "Category cannot be parent of itself"
+            })
 
-        #  Prevent circular hierarchy
+        # Prevent circular hierarchy
         CategoryService._validate_no_cycle(instance, parent)
 
-        #  Safe update
+        # Safe update
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
+
         return instance
 
     # ================= DELETE =================
     @staticmethod
     @transaction.atomic
     def delete(instance):
-        #  Optional: block delete if children exist
-        if instance.children.exists():
-            raise ValidationError("Cannot delete category with subcategories")
 
+        # Prevent delete if subcategories exist
+        if instance.children.exists():
+            raise ValidationError({
+                "error": (
+                    "Cannot delete category with subcategories"
+                )
+            })
+
+        # Prevent delete if products exist
+        if instance.products.exists():
+            raise ValidationError({
+                "error": (
+                    "This category contains products. "
+                    "Move or delete products first."
+                )
+            })
+
+        # Soft delete
         instance.delete()
 
     # ================= VALIDATION =================
@@ -56,8 +78,14 @@ class CategoryService:
         """
         Prevent circular category structure
         """
+
         current = parent
+
         while current:
+
             if current == instance:
-                raise ValidationError("Circular category structure detected")
+                raise ValidationError({
+                    "error": "Circular category structure detected"
+                })
+
             current = current.parent

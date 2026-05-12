@@ -30,6 +30,7 @@ class Shop(SluggedModel):
     # shop.py
     verified_at = models.DateTimeField(null=True, blank=True)
     rejection_reason = models.TextField(blank=True)
+    is_trusted_seller = models.BooleanField(default=False)
 
     shop_status = models.CharField(
         max_length=20,

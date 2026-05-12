@@ -1,13 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework.permissions import IsAdminUser
 from apps.products.models import Category
 from apps.products.services.category_service import CategoryService
 from apps.products.schemas.category.delete_schema import category_delete_schema
 
 
 class CategoryDeleteAPIView(APIView):
+    permission_classes = [IsAdminUser]
 
     @category_delete_schema
     def delete(self, request, pk):

@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from apps.products.models import ProductOption
 from apps.products.serializers.request.option_request import ProductOptionCreateSerializer
@@ -8,6 +9,7 @@ from apps.products.schemas.option.update_schema import option_update_schema
 
 
 class OptionUpdateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     @option_update_schema
     def put(self, request, pk):
@@ -18,4 +20,6 @@ class OptionUpdateAPIView(APIView):
 
         ProductOptionService.update_option(option, serializer.validated_data)
 
-        return Response({"message": "Option updated successfully"})
+        return Response({"message": "Option updated successfully",
+                         "id": option.id}
+                        )

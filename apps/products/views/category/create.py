@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
+
 
 from apps.products.serializers.request.category_request import CategoryCreateUpdateSerializer
 from apps.products.serializers.response.category_response import CategorySerializer
@@ -9,6 +11,7 @@ from apps.products.schemas.category.create_schema import category_create_schema
 
 
 class CategoryCreateAPIView(APIView):
+    permission_classes = [IsAdminUser]
 
     @category_create_schema
     def post(self, request):
