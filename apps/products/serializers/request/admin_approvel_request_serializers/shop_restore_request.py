@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 
-class ShopRestoreRequestSerializer(serializers.Serializer):
+class SellerShopRestoreRequestSerializer(serializers.Serializer):
     reason = serializers.CharField(
         required=False,
         allow_blank=True,

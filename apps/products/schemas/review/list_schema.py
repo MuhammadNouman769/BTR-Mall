@@ -3,7 +3,7 @@ from drf_spectacular.utils import (
     OpenApiParameter,
 )
 
-from apps.products.serializers.response.review_response import (
+from apps.products.serializers.response.admin_approvel_response_serializers.review_response import (
     ProductReviewResponseSerializer
 )
 

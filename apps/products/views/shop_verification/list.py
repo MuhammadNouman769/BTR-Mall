@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAdminUser
 
 from apps.products.selectors.shop_verification_selector import ShopVerificationSelector
 from apps.products.schemas.shop_verification.list_schema import pending_shop_list_schema
-from apps.products.serializers.response.shop_verification_response import ShopListResponseSerializer
+from apps.products.serializers.response.admin_approvel_response_serializers.shop_verification_response import ShopListResponseSerializer
 
 
 class PendingShopListAPIView(ListAPIView):

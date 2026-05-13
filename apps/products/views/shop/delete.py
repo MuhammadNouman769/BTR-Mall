@@ -3,7 +3,7 @@ from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework.permissions import IsAuthenticated
 
 from apps.products.models import Shop
-from apps.products.serializers.response.shop_response import ShopDetailSerializer
+from apps.products.serializers.response.shop_create_response_serializers.shop_response import ShopDetailSerializer
 
 @extend_schema_view(
     delete=extend_schema(

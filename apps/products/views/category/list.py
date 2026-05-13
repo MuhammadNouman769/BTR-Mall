@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from apps.products.models import Category
-from apps.products.serializers.response.category_response import CategorySerializer
+from apps.products.serializers.response.categories_response_serializers.category_response import CategorySerializer
 from apps.products.schemas.category.list_schema import category_list_schema
 
 

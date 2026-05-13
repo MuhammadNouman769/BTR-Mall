@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from apps.products.models import ProductVariant
 from apps.products.services.variant_service import VariantService
-from apps.products.serializers.request.variant_request import ProductVariantCreateSerializer
+from apps.products.serializers.request.variant_request_serializers.variant_request import ProductVariantCreateSerializer
 from apps.products.schemas.variant.update_schema import variant_update_schema
 
 

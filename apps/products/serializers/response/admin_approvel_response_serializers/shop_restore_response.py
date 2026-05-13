@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 
-class ShopRestoreResponseSerializer(serializers.Serializer):
+class SellerShopRestoreResponseSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(read_only=True)
     shop_id = serializers.IntegerField(read_only=True)

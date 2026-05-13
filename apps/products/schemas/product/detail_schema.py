@@ -1,10 +1,21 @@
 from drf_spectacular.utils import extend_schema
-from apps.products.serializers.response.product_response import ProductDetailSerializer
+from apps.products.serializers.response.product_response_serializers.product_response import ProductDetailResponseSerializer
 
 
 product_detail_schema = extend_schema(
     tags=["Products"],
     summary="Product Detail",
-    responses=ProductDetailSerializer,
-    description="Get full product detail including variants, options, images"
+
+    description="""
+    Returns full product detail including:
+
+    - Product basic info
+    - Categories
+    - Images
+    - Options
+    - Variants with stock & pricing
+    - Shop info
+    """,
+
+    responses=ProductDetailResponseSerializer
 )

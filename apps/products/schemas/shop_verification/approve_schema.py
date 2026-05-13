@@ -1,5 +1,5 @@
 from drf_spectacular.utils import extend_schema
-from apps.products.serializers.response.shop_verification_response import ShopActionResponseSerializer
+from apps.products.serializers.response.admin_approvel_response_serializers.shop_verification_response import ShopActionResponseSerializer
 
 
 approve_shop_schema = extend_schema(

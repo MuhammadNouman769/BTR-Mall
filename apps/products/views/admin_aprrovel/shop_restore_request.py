@@ -2,7 +2,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
 
 from apps.products.models.shop_restore_request import ShopActionRequest, ShopActionType
-from apps.products.serializers.response.shop_restore_request_list import (
+from apps.products.serializers.request.admin_approvel_request_serializers.shop_restore_request_list import (
     ShopRestoreRequestListSerializer
 )
 

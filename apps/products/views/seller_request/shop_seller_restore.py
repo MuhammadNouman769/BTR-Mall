@@ -11,12 +11,12 @@ from apps.products.models.shop_restore_request import (
     ShopRequestStatus
 )
 
-from apps.products.serializers.request.shop_restore_request import (
-    ShopRestoreRequestSerializer
+from apps.products.serializers.request.admin_approvel_request_serializers.shop_restore_request import (
+    SellerShopRestoreRequestSerializer
 )
 
-from apps.products.serializers.response.shop_restore_response import (
-    ShopRestoreResponseSerializer
+from apps.products.serializers.response.admin_approvel_response_serializers.shop_restore_response import (
+    SellerShopRestoreResponseSerializer
 )
 
 from apps.products.services.shop_restore_service import (
@@ -35,7 +35,7 @@ class ShopRestoreRequestAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    serializer_class = ShopRestoreRequestSerializer
+    serializer_class = SellerShopRestoreRequestSerializer
 
     def post(self, request, id):
 

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from apps.products.serializers.response.option_response import ProductOptionResponseSerializer
+from apps.products.serializers.response.option_response_serializers.option_response import ProductOptionResponseSerializer
 from apps.products.selectors.option_selector import ProductOptionSelector
 from apps.products.schemas.option.list_schema import option_list_schema
 

@@ -5,7 +5,7 @@ from drf_spectacular.utils import extend_schema_view
 
 from apps.products.models import ProductReview
 
-from apps.products.serializers.response.review_response import (
+from apps.products.serializers.response.admin_approvel_response_serializers.review_response import (
     ProductReviewResponseSerializer
 )
 

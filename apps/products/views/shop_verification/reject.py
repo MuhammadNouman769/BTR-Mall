@@ -6,9 +6,9 @@ from rest_framework import status
 
 from apps.products.models import Shop
 from apps.products.services.shop_verification_service import ShopVerificationService
-from apps.products.serializers.request.shop_verification_request import ShopRejectSerializer
+from apps.products.serializers.request.admin_approvel_request_serializers.shop_verification_request import ShopRejectSerializer
 from apps.products.schemas.shop_verification.reject_schema import reject_shop_schema
-from apps.products.serializers.response.shop_verification_response import ShopActionResponseSerializer
+from apps.products.serializers.response.admin_approvel_response_serializers.shop_verification_response import ShopActionResponseSerializer
 
 
 class RejectShopAPIView(APIView):

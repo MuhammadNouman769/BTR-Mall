@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 
-from apps.products.serializers.request.shop_request import ShopCreateSerializer
+from apps.products.serializers.request.shop_create_request_serializers.shop_request import ShopCreateSerializer
 from apps.products.services.shop_service import ShopService
 from apps.products.schemas.shop.create_schema import shop_create_schema
 

@@ -14,7 +14,7 @@ from apps.products.serializers.request.review_serializers.update_review import (
     ProductReviewUpdateSerializer
 )
 
-from apps.products.serializers.response.review_response import (
+from apps.products.serializers.response.admin_approvel_response_serializers.review_response import (
     ProductReviewResponseSerializer
 )
 

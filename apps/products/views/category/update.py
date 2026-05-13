@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from apps.products.models import Category
-from apps.products.serializers.request.category_request import CategoryCreateUpdateSerializer
-from apps.products.serializers.response.category_response import CategorySerializer
+from apps.products.serializers.request.categories_request_serializers.category_request import CategoryCreateUpdateSerializer
+from apps.products.serializers.response.categories_response_serializers.category_response import CategorySerializer
 from apps.products.services.category_service import CategoryService
 from apps.products.schemas.category.update_schema import category_update_schema
 

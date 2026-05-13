@@ -12,8 +12,8 @@ from apps.products.models.shop_restore_request import (
     ShopRequestStatus
 )
 
-from apps.products.serializers.response.shop_restore_response import (
-    ShopRestoreResponseSerializer
+from apps.products.serializers.response.admin_approvel_response_serializers.shop_restore_response import (
+    SellerShopRestoreResponseSerializer
 )
 
 from apps.products.schemas.admin_aprrovel.restore_approve_schema import (
@@ -30,7 +30,7 @@ class ApproveShopRestoreAPIView(APIView):
 
     permission_classes = [IsAdminUser]
 
-    serializer_class = ShopRestoreResponseSerializer
+    serializer_class = SellerShopRestoreResponseSerializer
 
     def post(self, request, id):
 

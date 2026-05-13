@@ -1,6 +1,6 @@
 from rest_framework.generics import RetrieveAPIView
 from apps.products.models import Shop
-from apps.products.serializers.response.shop_response import ShopDetailSerializer
+from apps.products.serializers.response.shop_create_response_serializers.shop_response import ShopDetailSerializer
 from apps.products.schemas.shop.detail_schema import shop_detail_schema
 
 from drf_spectacular.utils import extend_schema_view

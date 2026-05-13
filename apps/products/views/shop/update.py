@@ -5,8 +5,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 from apps.products.models import Shop
 from apps.products.services.shop_service import ShopService
-from apps.products.serializers.request.shop_update import ShopUpdateSerializer
-from apps.products.serializers.response.shop_response import ShopDetailSerializer
+from apps.products.serializers.request.shop_create_request_serializers.shop_update import ShopUpdateSerializer
+from apps.products.serializers.response.shop_create_response_serializers.shop_response import ShopDetailSerializer
 
 from drf_spectacular.utils import extend_schema
 

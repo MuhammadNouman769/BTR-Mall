@@ -1,17 +1,21 @@
 from rest_framework.generics import ListAPIView
-from apps.products.serializers.response.product_response import ProductListSerializer
-from apps.products.selectors.product_selector import ProductSelector
+from rest_framework.permissions import AllowAny
 
-from drf_spectacular.utils import extend_schema_view
+from apps.products.selectors.product_selector import ProductSelector
+from apps.products.serializers.response.product_response_serializers.product_response import ProductListResponseSerializer
+from apps.products.pagination import ProductPagination
 from apps.products.schemas.product.list_schema import product_list_schema
 
 
-@extend_schema_view(
-    get=product_list_schema
-)
+@product_list_schema
 class ProductListAPIView(ListAPIView):
 
-    serializer_class = ProductListSerializer
+    permission_classes = [AllowAny]
+    serializer_class = ProductListResponseSerializer
+    pagination_class = ProductPagination
 
     def get_queryset(self):
-        return ProductSelector.list_products()
+        return ProductSelector.list_products(
+            filters=self.request.query_params,
+            user=self.request.user
+        )

@@ -1,8 +1,7 @@
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, Min, Max
 
 from apps.products.models import (
     Product,
-    ProductImage,
     ProductVariant,
 )
 
@@ -12,64 +11,55 @@ from apps.common.enums import ProductStatus
 class ProductSelector:
 
     # =========================================================
-    # BASE QUERYSET
+    # BASE QUERYSET (OPTIMIZED)
     # =========================================================
     @staticmethod
     def base_queryset():
 
-        return Product.objects.select_related(
-            "shop",
-        ).prefetch_related(
-            "categories",
-            "images",
-            Prefetch(
-                "variants",
-                queryset=ProductVariant.objects.prefetch_related(
-                    "variant_images"
+        return (
+            Product.objects
+            .select_related("shop")
+            .prefetch_related(
+                "categories",
+                "images",
+                Prefetch(
+                    "variants",
+                    queryset=ProductVariant.objects
+                    .select_related(
+                        "option1",
+                        "option2",
+                        "option3"
+                    )
+                    .prefetch_related("variant_images")
                 )
             )
         )
 
     # =========================================================
-    # PUBLIC PRODUCTS
-    # Only visible/live products
+    # ROLE BASED QUERIES
     # =========================================================
     @classmethod
     def public_products(cls):
-
         return cls.base_queryset().filter(
             product_status=ProductStatus.ACTIVE
         )
 
-    # =========================================================
-    # SELLER PRODUCTS
-    # Seller can see all own products
-    # =========================================================
     @classmethod
-    def seller_products(cls, seller):
-
+    def seller_products(cls, user):
         return cls.base_queryset().filter(
-            shop=seller.shop
+            shop=user.shop
         )
 
-    # =========================================================
-    # ADMIN PRODUCTS
-    # Admin sees everything
-    # =========================================================
     @classmethod
     def admin_products(cls):
-
         return cls.base_queryset()
 
     # =========================================================
-    # LIST PRODUCTS
+    # SMART ENTRY POINT
     # =========================================================
     @classmethod
     def list_products(cls, filters=None, user=None):
 
-        # -----------------------------------------
-        # Role based queryset
-        # -----------------------------------------
         if user and user.is_staff:
             qs = cls.admin_products()
 
@@ -79,15 +69,10 @@ class ProductSelector:
         else:
             qs = cls.public_products()
 
-        # -----------------------------------------
-        # Apply filters
-        # -----------------------------------------
-        qs = cls.apply_filters(qs, filters)
-
-        return qs.distinct()
+        return cls.apply_filters(qs, filters).distinct()
 
     # =========================================================
-    # PRODUCT DETAIL
+    # DETAIL
     # =========================================================
     @classmethod
     def detail(cls, pk, user=None):
@@ -104,7 +89,7 @@ class ProductSelector:
         return qs.get(pk=pk)
 
     # =========================================================
-    # FILTER SYSTEM
+    # FILTER ENGINE (IMPROVED)
     # =========================================================
     @staticmethod
     def apply_filters(qs, filters):
@@ -112,42 +97,28 @@ class ProductSelector:
         if not filters:
             return qs
 
-        # -----------------------------------------------------
-        # CATEGORY FILTER
-        # -----------------------------------------------------
-        category = filters.get("category")
+        # Normalize filters (important for query_params)
+        def get(name):
+            val = filters.get(name)
+            return val if val not in [None, "", "null"] else None
 
+        # ---------------- CATEGORY ----------------
+        category = get("category")
         if category:
-            qs = qs.filter(
-                categories__id=category
-            )
+            qs = qs.filter(categories__id=category)
 
-        # -----------------------------------------------------
-        # SHOP FILTER
-        # -----------------------------------------------------
-        shop = filters.get("shop")
-
+        # ---------------- SHOP ----------------
+        shop = get("shop")
         if shop:
-            qs = qs.filter(
-                shop_id=shop
-            )
+            qs = qs.filter(shop_id=shop)
 
-        # -----------------------------------------------------
-        # STATUS FILTER
-        # Admin/Seller use
-        # -----------------------------------------------------
-        status = filters.get("status")
-
+        # ---------------- STATUS ----------------
+        status = get("status")
         if status:
-            qs = qs.filter(
-                product_status=status
-            )
+            qs = qs.filter(product_status=status)
 
-        # -----------------------------------------------------
-        # SEARCH
-        # -----------------------------------------------------
-        search = filters.get("search")
-
+        # ---------------- SEARCH ----------------
+        search = get("search")
         if search:
             qs = qs.filter(
                 Q(title__icontains=search) |
@@ -156,78 +127,41 @@ class ProductSelector:
                 Q(brand__icontains=search)
             )
 
-        # -----------------------------------------------------
-        # FEATURED
-        # -----------------------------------------------------
-        featured = filters.get("featured")
+        # ---------------- FLAGS ----------------
+        if filters.get("featured") is not None:
+            qs = qs.filter(is_featured=filters.get("featured") == "true")
 
-        if featured is not None:
-            qs = qs.filter(
-                is_featured=featured
-            )
+        if filters.get("best_seller") is not None:
+            qs = qs.filter(is_best_seller=filters.get("best_seller") == "true")
 
-        # -----------------------------------------------------
-        # BEST SELLER
-        # -----------------------------------------------------
-        best_seller = filters.get("best_seller")
+        if filters.get("on_sale") is not None:
+            qs = qs.filter(is_on_sale=filters.get("on_sale") == "true")
 
-        if best_seller is not None:
-            qs = qs.filter(
-                is_best_seller=best_seller
-            )
-
-        # -----------------------------------------------------
-        # ON SALE
-        # -----------------------------------------------------
-        on_sale = filters.get("on_sale")
-
-        if on_sale is not None:
-            qs = qs.filter(
-                is_on_sale=on_sale
-            )
-
-        # -----------------------------------------------------
-        # BRAND
-        # -----------------------------------------------------
-        brand = filters.get("brand")
-
+        # ---------------- BRAND ----------------
+        brand = get("brand")
         if brand:
-            qs = qs.filter(
-                brand__iexact=brand
-            )
+            qs = qs.filter(brand__iexact=brand)
 
-        # -----------------------------------------------------
-        # PRICE RANGE
-        # -----------------------------------------------------
-        min_price = filters.get("min_price")
-        max_price = filters.get("max_price")
+        # ---------------- PRICE RANGE ----------------
+        min_price = get("min_price")
+        max_price = get("max_price")
 
         if min_price:
-            qs = qs.filter(
-                variants__price__gte=min_price
-            )
+            qs = qs.filter(variants__price__gte=min_price)
 
         if max_price:
-            qs = qs.filter(
-                variants__price__lte=max_price
-            )
+            qs = qs.filter(variants__price__lte=max_price)
 
-        # -----------------------------------------------------
-        # STOCK
-        # -----------------------------------------------------
-        in_stock = filters.get("in_stock")
+        # ---------------- STOCK ----------------
+        if get("in_stock"):
+            qs = qs.filter(variants__stock_quantity__gt=0)
 
-        if in_stock:
-            qs = qs.filter(
-                variants__stock_quantity__gt=0
-            )
+        # =========================================================
+        # SORTING (SAFE)
+        # =========================================================
+        ordering = get("ordering")
 
-        # -----------------------------------------------------
-        # SORTING
-        # -----------------------------------------------------
-        ordering = filters.get("ordering")
-
-        allowed_ordering = [
+        allowed = {
             "created_at",
             "-created_at",
             "title",
@@ -236,12 +170,8 @@ class ProductSelector:
             "-average_rating",
             "total_sold",
             "-total_sold",
-        ]
+        }
 
-        if ordering in allowed_ordering:
-            qs = qs.order_by(ordering)
-
-        else:
-            qs = qs.order_by("-created_at")
+        qs = qs.order_by(ordering if ordering in allowed else "-created_at")
 
         return qs

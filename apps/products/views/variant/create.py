@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from apps.products.services.variant_service import VariantService
-from apps.products.serializers.request.variant_request import ProductVariantCreateSerializer
+from apps.products.serializers.request.variant_request_serializers.variant_request import ProductVariantCreateSerializer
 from apps.products.schemas.variant.create_schema import variant_create_schema
 
 

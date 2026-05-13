@@ -1,5 +1,5 @@
 from drf_spectacular.utils import extend_schema
-from apps.products.serializers.response.shop_response import ShopListSerializer
+from apps.products.serializers.response.shop_create_response_serializers.shop_response import ShopListSerializer
 
 
 shop_list_schema = extend_schema(

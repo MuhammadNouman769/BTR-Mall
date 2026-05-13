@@ -1,11 +1,11 @@
 from drf_spectacular.utils import extend_schema
 
-from apps.products.serializers.request.shop_restore_request import (
-    ShopRestoreRequestSerializer
+from apps.products.serializers.request.admin_approvel_request_serializers.shop_restore_request import (
+    SellerShopRestoreRequestSerializer
 )
 
-from apps.products.serializers.response.shop_restore_response import (
-    ShopRestoreResponseSerializer
+from apps.products.serializers.response.admin_approvel_response_serializers.shop_restore_response import (
+    SellerShopRestoreResponseSerializer
 )
 
 
@@ -19,10 +19,10 @@ shop_restore_request_schema = extend_schema(
     Request goes to admin for approval.
     """,
 
-    request=ShopRestoreRequestSerializer,
+    request=SellerShopRestoreRequestSerializer,
 
     responses={
-        200: ShopRestoreResponseSerializer,
+        200: SellerShopRestoreResponseSerializer,
         400: {"example": {"error": "Restore request already submitted"}},
         404: {"example": {"error": "Shop not found"}},
     }

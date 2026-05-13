@@ -1,6 +1,6 @@
 from drf_spectacular.utils import extend_schema
 
-from apps.products.serializers.response.shop_restore_request_list import (
+from apps.products.serializers.request.admin_approvel_request_serializers.shop_restore_request_list import (
     ShopRestoreRequestSerializer
 )
 
