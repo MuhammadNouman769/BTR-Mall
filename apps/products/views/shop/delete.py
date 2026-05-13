@@ -1,25 +1,34 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from apps.products.models import Shop
-from apps.products.serializers.request.shop_create_request_serializers.delete import EmptySerializer
 
 
-@extend_schema_view(
-    delete=extend_schema(
-        tags=["Shop"],
-        summary="Delete Shop",
-        request=None,
-        responses={204: None}
-    )
-)
 class ShopDeleteAPIView(APIView):
 
-    queryset = Shop.objects.all()
-    serializer_class = EmptySerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Shop.objects.filter(owner=self.request.user)
+    def delete(self, request):
+
+        # -----------------------------------
+        # Get user shop safely
+        # -----------------------------------
+        try:
+            shop = Shop.objects.get(owner=request.user)
+        except Shop.DoesNotExist:
+            return Response(
+                {"error": "Shop not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # -----------------------------------
+        # Delete shop
+        # -----------------------------------
+        shop.delete()
+
+        return Response(
+            {"message": "Shop deleted successfully"},
+            status=status.HTTP_204_NO_CONTENT
+        )
