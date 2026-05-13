@@ -1,4 +1,5 @@
-from rest_framework.generics import DestroyAPIView
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
@@ -14,7 +15,7 @@ from apps.products.serializers.request.shop_create_request_serializers.delete im
         responses={204: None}
     )
 )
-class ShopDeleteAPIView(DestroyAPIView):
+class ShopDeleteAPIView(APIView):
 
     queryset = Shop.objects.all()
     serializer_class = EmptySerializer
