@@ -1,3 +1,5 @@
+# apps/products/services/product_service.py
+
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
@@ -8,134 +10,226 @@ from apps.products.models import (
     ProductOptionValue,
     ProductVariant,
     Category,
-    VariantImage
+    VariantImage,
 )
 
 from apps.common.enums import (
     ProductStatus,
     SellerTrustLevel,
     UserRoleChoices,
-    ShopStatusChoices
+    ShopStatusChoices,
 )
 
 
 class ProductService:
 
+    ACTIVE_TRUST_LEVELS = {
+        SellerTrustLevel.TRUSTED,
+        SellerTrustLevel.VERIFIED,
+    }
+
     # =========================================================
-    # SELLER VALIDATION
+    # VALIDATE SELLER
     # =========================================================
     @staticmethod
     def validate_seller(user):
+
         if user.role != UserRoleChoices.SELLER:
-            raise ValidationError({"error": "Only sellers can create products"})
+            raise ValidationError({
+                "error": "Only sellers can manage products"
+            })
 
         if not hasattr(user, "shop"):
-            raise ValidationError({"error": "Shop not found"})
+            raise ValidationError({
+                "error": "Shop not found"
+            })
 
         if user.shop.shop_status != ShopStatusChoices.APPROVED:
-            raise ValidationError({"error": "Shop is not approved"})
+            raise ValidationError({
+                "error": "Shop is not approved"
+            })
 
         return user.shop
 
     # =========================================================
-    # CATEGORY VALIDATION
+    # VALIDATE PRODUCT OWNER
+    # =========================================================
+    @staticmethod
+    def validate_product_owner(product, user):
+
+        if product.shop != user.shop:
+            raise ValidationError({
+                "error": "You do not own this product"
+            })
+
+    # =========================================================
+    # VALIDATE CATEGORIES
     # =========================================================
     @staticmethod
     def validate_categories(category_ids):
-        categories = Category.objects.filter(id__in=category_ids)
+
+        categories = Category.objects.filter(
+            id__in=category_ids
+        )
 
         if len(category_ids) != categories.count():
-            raise ValidationError({"error": "Invalid categories provided"})
+            raise ValidationError({
+                "error": "Invalid categories provided"
+            })
 
         return categories
 
     # =========================================================
-    # IMAGE VALIDATION
+    # VALIDATE PRODUCT IMAGES
     # =========================================================
     @staticmethod
     def validate_images(images):
+
         if len(images) > 10:
-            raise ValidationError({"error": "Maximum 10 images allowed"})
+            raise ValidationError({
+                "error": "Maximum 10 product images allowed"
+            })
 
     # =========================================================
-    # OPTION VALIDATION
+    # VALIDATE OPTIONS
     # =========================================================
     @staticmethod
     def validate_options(options):
-        names = set()
+
+        option_names = set()
 
         for opt in options:
+
             name = opt["name"].strip().lower()
 
-            if name in names:
-                raise ValidationError({"error": f"Duplicate option {name}"})
+            if name in option_names:
+                raise ValidationError({
+                    "error": f'Duplicate option "{name}"'
+                })
 
-            names.add(name)
+            option_names.add(name)
 
-            if not opt.get("values"):
-                raise ValidationError({"error": f"Option {name} must have values"})
+            values = opt.get("values", [])
+
+            if not values:
+                raise ValidationError({
+                    "error": f'Option "{name}" must contain values'
+                })
 
     # =========================================================
-    # VARIANT VALIDATION
+    # VALIDATE VARIANTS
     # =========================================================
     @staticmethod
     def validate_variants(variants):
+
         if not variants:
-            raise ValidationError({"error": "At least one variant required"})
+            raise ValidationError({
+                "error": "At least one variant is required"
+            })
 
         skus = set()
 
         for var in variants:
+
             sku = var.get("sku")
             price = var.get("price", 0)
             stock = var.get("stock_quantity", 0)
 
             if not sku:
-                raise ValidationError({"error": "SKU is required"})
+                raise ValidationError({
+                    "error": "SKU is required"
+                })
 
             if sku in skus:
-                raise ValidationError({"error": f"Duplicate SKU {sku}"})
+                raise ValidationError({
+                    "error": f'Duplicate SKU "{sku}"'
+                })
+
+            if ProductVariant.objects.filter(sku=sku).exists():
+                raise ValidationError({
+                    "error": f'SKU "{sku}" already exists'
+                })
 
             if price <= 0:
-                raise ValidationError({"error": "Price must be greater than 0"})
+                raise ValidationError({
+                    "error": "Variant price must be greater than 0"
+                })
 
             if stock < 0:
-                raise ValidationError({"error": "Stock cannot be negative"})
+                raise ValidationError({
+                    "error": "Stock quantity cannot be negative"
+                })
+
+            images = var.get("images", [])
+
+            if len(images) > 5:
+                raise ValidationError({
+                    "error": "Maximum 5 variant images allowed"
+                })
 
             skus.add(sku)
 
     # =========================================================
-    # PRODUCT STATUS LOGIC
+    # DETERMINE PRODUCT STATUS
     # =========================================================
     @staticmethod
     def determine_product_status(shop, variants):
-        total_stock = sum(v.get("stock_quantity", 0) for v in variants)
+
+        total_stock = sum(
+            var.get("stock_quantity", 0)
+            for var in variants
+        )
 
         if total_stock <= 0:
             return ProductStatus.OUT_OF_STOCK
 
-        if shop.trust_level in [
-            SellerTrustLevel.TRUSTED,
-            SellerTrustLevel.VERIFIED
-        ]:
+        if shop.trust_level in ProductService.ACTIVE_TRUST_LEVELS:
             return ProductStatus.ACTIVE
 
         return ProductStatus.PENDING
 
     # =========================================================
-    # VARIANT CREATION (CLEAN)
+    # CREATE PRODUCT OPTIONS
+    # =========================================================
+    @staticmethod
+    def create_options(product, options):
+
+        for opt in options:
+
+            option = ProductOption.objects.create(
+                product=product,
+                name=opt["name"]
+            )
+
+            values = opt.get("values", [])
+
+            ProductOptionValue.objects.bulk_create([
+                ProductOptionValue(
+                    option=option,
+                    value=v if isinstance(v, str) else v["value"]
+                )
+                for v in values
+            ])
+
+    # =========================================================
+    # CREATE PRODUCT VARIANTS
     # =========================================================
     @staticmethod
     def create_variants(product, variants):
+
         for var in variants:
-            images = var.pop("images", [])
+
+            variant_data = var.copy()
+
+            images = variant_data.pop("images", [])
 
             variant = ProductVariant.objects.create(
                 product=product,
-                **var
+                **variant_data
             )
 
             for img in images:
+
                 VariantImage.objects.create(
                     variant=variant,
                     image=img["image"],
@@ -158,50 +252,71 @@ class ProductService:
         variants = validated_data.pop("variants", [])
         category_ids = validated_data.pop("category_ids", [])
 
+        # -----------------------------------------------------
         # VALIDATIONS
-        categories = ProductService.validate_categories(category_ids)
+        # -----------------------------------------------------
+        categories = ProductService.validate_categories(
+            category_ids
+        )
+
         ProductService.validate_images(images)
+
         ProductService.validate_options(options)
+
         ProductService.validate_variants(variants)
 
-        # STATUS
-        status = ProductService.determine_product_status(shop, variants)
+        # -----------------------------------------------------
+        # DETERMINE STATUS
+        # -----------------------------------------------------
+        product_status = ProductService.determine_product_status(
+            shop,
+            variants
+        )
 
+        # -----------------------------------------------------
         # CREATE PRODUCT
+        # -----------------------------------------------------
         product = Product.objects.create(
             shop=shop,
-            product_status=status,
+            product_status=product_status,
             **validated_data
         )
 
+        # -----------------------------------------------------
+        # CATEGORIES
+        # -----------------------------------------------------
         product.categories.set(categories)
 
-        # IMAGES
+        # -----------------------------------------------------
+        # PRODUCT IMAGES
+        # -----------------------------------------------------
         if images:
+
             ProductImage.objects.bulk_create([
-                ProductImage(product=product, **img)
+                ProductImage(
+                    product=product,
+                    **img
+                )
                 for img in images
             ])
 
+        # -----------------------------------------------------
         # OPTIONS
+        # -----------------------------------------------------
         if options:
-            for opt in options:
-                option = ProductOption.objects.create(
-                    product=product,
-                    name=opt["name"]
-                )
+            ProductService.create_options(
+                product,
+                options
+            )
 
-                ProductOptionValue.objects.bulk_create([
-                    ProductOptionValue(
-                        option=option,
-                        value=v if isinstance(v, str) else v["value"]
-                    )
-                    for v in opt.get("values", [])
-                ])
-
+        # -----------------------------------------------------
         # VARIANTS
+        # -----------------------------------------------------
         if variants:
-            ProductService.create_variants(product, variants)
+            ProductService.create_variants(
+                product,
+                variants
+            )
 
         return product
 
@@ -214,92 +329,136 @@ class ProductService:
 
         if instance.product_status in [
             ProductStatus.DELETED,
-            ProductStatus.ARCHIVED
+            ProductStatus.ARCHIVED,
         ]:
-            raise ValidationError({"error": "Product cannot be updated"})
+            raise ValidationError({
+                "error": "This product cannot be updated"
+            })
 
         images = validated_data.pop("images", None)
         options = validated_data.pop("options", None)
         variants = validated_data.pop("variants", None)
         category_ids = validated_data.pop("category_ids", None)
 
-        # BASIC UPDATE
+        # -----------------------------------------------------
+        # BASIC FIELDS UPDATE
+        # -----------------------------------------------------
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
 
-        # CATEGORIES
+        # -----------------------------------------------------
+        # UPDATE CATEGORIES
+        # -----------------------------------------------------
         if category_ids is not None:
-            categories = ProductService.validate_categories(category_ids)
+
+            categories = ProductService.validate_categories(
+                category_ids
+            )
+
             instance.categories.set(categories)
 
-        # IMAGES
+        # -----------------------------------------------------
+        # UPDATE IMAGES
+        # -----------------------------------------------------
         if images is not None:
+
             ProductService.validate_images(images)
+
             instance.images.all().delete()
 
             ProductImage.objects.bulk_create([
-                ProductImage(product=instance, **img)
+                ProductImage(
+                    product=instance,
+                    **img
+                )
                 for img in images
             ])
 
-        # OPTIONS
+        # -----------------------------------------------------
+        # UPDATE OPTIONS
+        # -----------------------------------------------------
         if options is not None:
+
             ProductService.validate_options(options)
+
             instance.options.all().delete()
 
-            for opt in options:
-                option = ProductOption.objects.create(
-                    product=instance,
-                    name=opt["name"]
-                )
+            ProductService.create_options(
+                instance,
+                options
+            )
 
-                ProductOptionValue.objects.bulk_create([
-                    ProductOptionValue(
-                        option=option,
-                        value=v if isinstance(v, str) else v["value"]
-                    )
-                    for v in opt.get("values", [])
-                ])
-
-        # VARIANTS
+        # -----------------------------------------------------
+        # UPDATE VARIANTS
+        # -----------------------------------------------------
         if variants is not None:
+
             ProductService.validate_variants(variants)
+
             instance.variants.all().delete()
 
-            ProductService.create_variants(instance, variants)
-
-            instance.product_status = ProductService.determine_product_status(
-                instance.shop,
+            ProductService.create_variants(
+                instance,
                 variants
             )
+
+            instance.product_status = (
+                ProductService.determine_product_status(
+                    instance.shop,
+                    variants
+                )
+            )
+
             instance.save()
 
         return instance
 
     # =========================================================
-    # SOFT DELETE
+    # SOFT DELETE PRODUCT
     # =========================================================
     @staticmethod
     def delete_product(instance):
+
         instance.product_status = ProductStatus.DELETED
-        instance.save()
+
+        instance.save(
+            update_fields=["product_status"]
+        )
 
     # =========================================================
-    # STATUS HELPERS
+    # ACTIVATE PRODUCT
     # =========================================================
     @staticmethod
     def activate_product(instance):
-        instance.product_status = ProductStatus.ACTIVE
-        instance.save()
 
+        instance.product_status = ProductStatus.ACTIVE
+
+        instance.save(
+            update_fields=["product_status"]
+        )
+
+    # =========================================================
+    # ARCHIVE PRODUCT
+    # =========================================================
     @staticmethod
     def archive_product(instance):
-        instance.product_status = ProductStatus.ARCHIVED
-        instance.save()
 
+        instance.product_status = ProductStatus.ARCHIVED
+
+        instance.save(
+            update_fields=["product_status"]
+        )
+
+    # =========================================================
+    # MARK OUT OF STOCK
+    # =========================================================
     @staticmethod
     def mark_out_of_stock(instance):
+
         instance.product_status = ProductStatus.OUT_OF_STOCK
-        instance.save()
+
+        instance.save(
+            update_fields=["product_status"]
+        )
