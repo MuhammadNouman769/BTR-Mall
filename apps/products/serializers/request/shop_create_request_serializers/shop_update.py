@@ -3,8 +3,10 @@ from apps.products.models import Shop
 
 
 class ShopUpdateSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Shop
+
         fields = [
             "name",
             "description",
@@ -15,10 +17,22 @@ class ShopUpdateSerializer(serializers.ModelSerializer):
             "cnic_back",
         ]
 
-    def update(self, instance, validated_data):
-        # simple clean update (partial supported)
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+    # =========================================================
+    # FIELD VALIDATION
+    # =========================================================
+    def validate_cnic_number(self, value):
 
-        instance.save()
-        return instance
+        if value:
+            value = value.strip()
+
+            if not value.isdigit():
+                raise serializers.ValidationError(
+                    "CNIC must contain only digits"
+                )
+
+            if len(value) != 13:
+                raise serializers.ValidationError(
+                    "CNIC must be exactly 13 digits"
+                )
+
+        return value
