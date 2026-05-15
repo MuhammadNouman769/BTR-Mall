@@ -1,23 +1,45 @@
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.conf import settings
 
 
-def send_email(subject, message, recipient_list):
+def send_email(subject, html_content, recipient_list):
+
     try:
-        send_mail(
+
+        email = EmailMultiAlternatives(
             subject=subject,
-            message=message,
+            body="OTP Verification",
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=recipient_list,
-            fail_silently=False,
+            to=recipient_list,
         )
+
+        email.attach_alternative(
+            html_content,
+            "text/html"
+        )
+
+        email.send()
+
         return True, "Email sent"
+
     except Exception as e:
         return False, str(e)
 
 
 def send_otp_email(email, otp):
-    subject = "OTP Verification"
-    message = f"Your OTP is {otp}"
 
-    return send_email(subject, message, [email])
+    subject = "BTR Mall OTP Verification"
+
+    html_content = render_to_string(
+        "emails/otp_email.html",
+        {
+            "otp": otp
+        }
+    )
+
+    return send_email(
+        subject,
+        html_content,
+        [email]
+    )
