@@ -5,12 +5,12 @@ class ShopVerificationService:
 
     @staticmethod
     def approve_shop(shop, admin_user):
-        shop.status = ShopStatusChoices.APPROVED
+        shop.shop_status = ShopStatusChoices.APPROVED
         shop.is_verified = True
         shop.verified_at = timezone.now()
         shop.rejection_reason = ""
         shop.save(update_fields=[
-            "status",
+            "shop_status",
             "is_verified",
             "verified_at",
             "rejection_reason"
@@ -19,11 +19,11 @@ class ShopVerificationService:
 
     @staticmethod
     def reject_shop(shop, reason):
-        shop.status = ShopStatusChoices.REJECTED
+        shop.shop_status = ShopStatusChoices.REJECTED
         shop.is_verified = False
         shop.rejection_reason = reason
         shop.save(update_fields=[
-            "status",
+            "shop_status",
             "is_verified",
             "rejection_reason"
         ])
@@ -31,6 +31,6 @@ class ShopVerificationService:
 
     @staticmethod
     def send_to_review(shop):
-        shop.status = ShopStatusChoices.UNDER_REVIEW
-        shop.save(update_fields=["status"])
+        shop.shop_status = ShopStatusChoices.UNDER_REVIEW
+        shop.save(update_fields=["shop_status"])
         return shop

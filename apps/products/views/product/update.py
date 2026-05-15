@@ -1,6 +1,11 @@
+# apps/products/views/product/update.py
+
+import json
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 
 from drf_spectacular.utils import extend_schema_view
@@ -32,28 +37,47 @@ class ProductUpdateAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    parser_classes = [
+        MultiPartParser,
+        FormParser,
+    ]
+
+    # =====================================================
+    # PUT
+    # =====================================================
+
     def put(self, request, id):
 
         return self.update(
-            request,
-            id,
+            request=request,
+            id=id,
             partial=False
         )
+
+    # =====================================================
+    # PATCH
+    # =====================================================
 
     def patch(self, request, id):
 
         return self.update(
-            request,
-            id,
+            request=request,
+            id=id,
             partial=True
         )
 
+    # =====================================================
+    # UPDATE
+    # =====================================================
+
     def update(self, request, id, partial=False):
 
-        # -----------------------------------------
-        # Seller Validation
-        # -----------------------------------------
+        # -------------------------------------------------
+        # ROLE VALIDATION
+        # -------------------------------------------------
+
         if request.user.role != UserRoleChoices.SELLER:
+
             return Response(
                 {
                     "error": "Only sellers can update products"
@@ -61,16 +85,19 @@ class ProductUpdateAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # -----------------------------------------
-        # Product Ownership Validation
-        # -----------------------------------------
+        # -------------------------------------------------
+        # GET PRODUCT
+        # -------------------------------------------------
+
         try:
+
             product = Product.objects.get(
                 id=id,
                 shop=request.user.shop
             )
 
         except Product.DoesNotExist:
+
             return Response(
                 {
                     "error": "Product not found"
@@ -78,28 +105,115 @@ class ProductUpdateAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # -----------------------------------------
-        # Serializer
-        # -----------------------------------------
+        # -------------------------------------------------
+        # COPY REQUEST DATA
+        # -------------------------------------------------
+
+        data = request.data.copy()
+
+        # -------------------------------------------------
+        # PARSE JSON FIELDS
+        # -------------------------------------------------
+
+        json_fields = [
+            "category_ids",
+            "options",
+            "variants",
+        ]
+
+        for field in json_fields:
+
+            value = data.get(field)
+
+            if value and isinstance(value, str):
+
+                try:
+
+                    data[field] = json.loads(value)
+
+                except json.JSONDecodeError:
+
+                    return Response(
+                        {
+                            "error": f"Invalid JSON format for '{field}'"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+        # -------------------------------------------------
+        # HANDLE PRODUCT IMAGES
+        # -------------------------------------------------
+
+        product_images = request.FILES.getlist("images")
+
+        if product_images:
+
+            parsed_images = []
+
+            for image in product_images:
+
+                parsed_images.append({
+                    "image": image,
+                    "alt_text": "",
+                    "position": 0,
+                })
+
+            data["images"] = parsed_images
+
+        # -------------------------------------------------
+        # HANDLE VARIANT IMAGES
+        # -------------------------------------------------
+
+        variants = data.get("variants", [])
+
+        for index, variant in enumerate(variants):
+
+            variant_images = request.FILES.getlist(
+                f"variants[{index}][images]"
+            )
+
+            if variant_images:
+
+                parsed_variant_images = []
+
+                for image in variant_images:
+
+                    parsed_variant_images.append({
+                        "image": image,
+                        "alt_text": "",
+                        "is_main": False,
+                        "position": 0,
+                    })
+
+                variant["images"] = parsed_variant_images
+
+        # -------------------------------------------------
+        # SERIALIZER
+        # -------------------------------------------------
+
         serializer = ProductCreateSerializer(
             product,
-            data=request.data,
+            data=data,
             partial=partial
         )
 
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(
+            raise_exception=True
+        )
 
-        # -----------------------------------------
-        # Update Product
-        # -----------------------------------------
+        # -------------------------------------------------
+        # UPDATE PRODUCT
+        # -------------------------------------------------
+
         product = ProductService.update_product(
             instance=product,
             validated_data=serializer.validated_data
         )
 
-        # -----------------------------------------
-        # Response
-        # -----------------------------------------
+        # -------------------------------------------------
+        # RESPONSE
+        # -------------------------------------------------
+
         return Response(
             {
                 "message": "Product updated successfully",

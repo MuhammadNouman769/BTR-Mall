@@ -2,13 +2,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-
+from apps.products.serializers.request.shop_create_request_serializers.delete import ShopDeleteSerializer
 from apps.products.models import Shop
 
 
 class ShopDeleteAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
+    serializer_class = ShopDeleteSerializer
 
     def delete(self, request):
 

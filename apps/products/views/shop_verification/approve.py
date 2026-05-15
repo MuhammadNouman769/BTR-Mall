@@ -25,7 +25,7 @@ class ApproveShopAPIView(APIView):
             "shop": {
                 "id": shop.id,
                 "name": shop.name,
-                "status": shop.status,
+                "shop_status": shop.shop_status,
                 "is_verified": shop.is_verified
             }
         }, status=status.HTTP_200_OK)

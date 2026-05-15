@@ -1,6 +1,7 @@
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiExample,
+    OpenApiResponse,
 )
 
 from apps.products.serializers.request.product_resquest_serializers.product_request import (
@@ -19,22 +20,28 @@ product_update_schema = extend_schema(
     summary="Update Product",
 
     description="""
-    Update an existing ecommerce product.
+Update an existing ecommerce product.
 
-    Seller can update:
-    - Basic information
-    - Categories
-    - Product images
-    - Options
-    - Variants
-    - SEO metadata
-    - Inventory
-    """,
+Seller can update:
+- Basic information
+- Categories
+- Product images
+- Variant images
+- Product options
+- Product variants
+- SEO metadata
+- Inventory
+""",
 
-    request=ProductCreateSerializer,
+    request={
+        "multipart/form-data": ProductCreateSerializer
+    },
 
     responses={
-        200: ProductDetailResponseSerializer
+        200: OpenApiResponse(
+            response=ProductDetailResponseSerializer,
+            description="Product updated successfully"
+        )
     },
 
     examples=[
@@ -73,7 +80,7 @@ product_update_schema = extend_schema(
 
                 "images": [
                     {
-                        "image": "updated.jpg",
+                        "image": "(binary file)",
                         "alt_text": "Main Image",
                         "position": 1
                     }
@@ -106,10 +113,21 @@ product_update_schema = extend_schema(
 
                         "track_inventory": True,
 
-                        "allow_backorder": False
+                        "allow_backorder": False,
+
+                        "images": [
+                            {
+                                "image": "(binary file)",
+                                "alt_text": "Variant Front",
+                                "is_main": True,
+                                "position": 1
+                            }
+                        ]
                     }
                 ]
-            }
+            },
+
+            request_only=True,
         )
     ]
 )

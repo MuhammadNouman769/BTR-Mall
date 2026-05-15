@@ -1,4 +1,4 @@
 from rest_framework import serializers
 
-class EmptySerializer(serializers.Serializer):
+class ShopDeleteSerializer(serializers.Serializer):
     pass

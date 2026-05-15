@@ -68,6 +68,9 @@ class ProductService:
     @staticmethod
     def validate_categories(category_ids):
 
+        if not category_ids:
+            return []
+
         categories = Category.objects.filter(
             id__in=category_ids
         )
@@ -89,6 +92,13 @@ class ProductService:
             raise ValidationError({
                 "error": "Maximum 10 product images allowed"
             })
+
+        for img in images:
+
+            if not img.get("image"):
+                raise ValidationError({
+                    "error": "Image file is required"
+                })
 
     # =========================================================
     # VALIDATE OPTIONS
@@ -116,11 +126,28 @@ class ProductService:
                     "error": f'Option "{name}" must contain values'
                 })
 
+            value_names = set()
+
+            for value in values:
+
+                val = (
+                    value["value"]
+                    if isinstance(value, dict)
+                    else value
+                ).strip().lower()
+
+                if val in value_names:
+                    raise ValidationError({
+                        "error": f'Duplicate value "{val}" in option "{name}"'
+                    })
+
+                value_names.add(val)
+
     # =========================================================
     # VALIDATE VARIANTS
     # =========================================================
     @staticmethod
-    def validate_variants(variants):
+    def validate_variants(variants, product=None):
 
         if not variants:
             raise ValidationError({
@@ -145,7 +172,16 @@ class ProductService:
                     "error": f'Duplicate SKU "{sku}"'
                 })
 
-            if ProductVariant.objects.filter(sku=sku).exists():
+            existing_variant = ProductVariant.objects.filter(
+                sku=sku
+            )
+
+            if product:
+                existing_variant = existing_variant.exclude(
+                    product=product
+                )
+
+            if existing_variant.exists():
                 raise ValidationError({
                     "error": f'SKU "{sku}" already exists'
                 })
@@ -165,6 +201,16 @@ class ProductService:
             if len(images) > 5:
                 raise ValidationError({
                     "error": "Maximum 5 variant images allowed"
+                })
+
+            main_images = [
+                img for img in images
+                if img.get("is_main")
+            ]
+
+            if len(main_images) > 1:
+                raise ValidationError({
+                    "error": "Only one main image allowed per variant"
                 })
 
             skus.add(sku)
@@ -194,12 +240,16 @@ class ProductService:
     @staticmethod
     def create_options(product, options):
 
+        option_objects = []
+
         for opt in options:
 
             option = ProductOption.objects.create(
                 product=product,
                 name=opt["name"]
             )
+
+            option_objects.append(option)
 
             values = opt.get("values", [])
 
@@ -210,6 +260,8 @@ class ProductService:
                 )
                 for v in values
             ])
+
+        return option_objects
 
     # =========================================================
     # CREATE PRODUCT VARIANTS
@@ -228,14 +280,23 @@ class ProductService:
                 **variant_data
             )
 
+            variant_images = []
+
             for img in images:
 
-                VariantImage.objects.create(
-                    variant=variant,
-                    image=img["image"],
-                    alt_text=img.get("alt_text", ""),
-                    is_main=img.get("is_main", False),
-                    position=img.get("position", 0),
+                variant_images.append(
+                    VariantImage(
+                        variant=variant,
+                        image=img["image"],
+                        alt_text=img.get("alt_text", ""),
+                        is_main=img.get("is_main", False),
+                        position=img.get("position", 0),
+                    )
+                )
+
+            if variant_images:
+                VariantImage.objects.bulk_create(
+                    variant_images
                 )
 
     # =========================================================
@@ -285,7 +346,8 @@ class ProductService:
         # -----------------------------------------------------
         # CATEGORIES
         # -----------------------------------------------------
-        product.categories.set(categories)
+        if categories:
+            product.categories.set(categories)
 
         # -----------------------------------------------------
         # PRODUCT IMAGES
@@ -295,7 +357,9 @@ class ProductService:
             ProductImage.objects.bulk_create([
                 ProductImage(
                     product=product,
-                    **img
+                    image=img["image"],
+                    alt_text=img.get("alt_text", ""),
+                    position=img.get("position", 0),
                 )
                 for img in images
             ])
@@ -304,6 +368,7 @@ class ProductService:
         # OPTIONS
         # -----------------------------------------------------
         if options:
+
             ProductService.create_options(
                 product,
                 options
@@ -313,6 +378,7 @@ class ProductService:
         # VARIANTS
         # -----------------------------------------------------
         if variants:
+
             ProductService.create_variants(
                 product,
                 variants
@@ -343,10 +409,16 @@ class ProductService:
         # -----------------------------------------------------
         # BASIC FIELDS UPDATE
         # -----------------------------------------------------
+        update_fields = []
+
         for attr, value in validated_data.items():
+
             setattr(instance, attr, value)
 
-        instance.save()
+            update_fields.append(attr)
+
+        if update_fields:
+            instance.save(update_fields=update_fields)
 
         # -----------------------------------------------------
         # UPDATE CATEGORIES
@@ -371,7 +443,9 @@ class ProductService:
             ProductImage.objects.bulk_create([
                 ProductImage(
                     product=instance,
-                    **img
+                    image=img["image"],
+                    alt_text=img.get("alt_text", ""),
+                    position=img.get("position", 0),
                 )
                 for img in images
             ])
@@ -395,7 +469,10 @@ class ProductService:
         # -----------------------------------------------------
         if variants is not None:
 
-            ProductService.validate_variants(variants)
+            ProductService.validate_variants(
+                variants,
+                product=instance
+            )
 
             instance.variants.all().delete()
 
@@ -411,7 +488,9 @@ class ProductService:
                 )
             )
 
-            instance.save()
+            instance.save(
+                update_fields=["product_status"]
+            )
 
         return instance
 
