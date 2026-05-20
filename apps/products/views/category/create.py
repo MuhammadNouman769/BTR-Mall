@@ -20,7 +20,6 @@ class CategoryCreateAPIView(APIView):
         serializer.is_valid(raise_exception=True)
 
         category = CategoryService.create(
-            request.user,
             serializer.validated_data
         )
 
