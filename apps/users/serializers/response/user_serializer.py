@@ -16,3 +16,10 @@ class UserSerializer(serializers.ModelSerializer):
             "account_status",
             "email_verified",
         ]
+
+        read_only_fields = [
+            "id",
+            "role",
+            "account_status",
+            "email_verified",
+        ]
