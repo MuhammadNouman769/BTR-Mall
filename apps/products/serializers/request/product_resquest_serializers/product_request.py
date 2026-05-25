@@ -3,6 +3,8 @@
 from rest_framework import serializers
 
 from apps.products.models import Product
+from apps.products.models.category import Category
+from apps.products.models.variant import ProductVariant
 
 
 # =========================================================
@@ -11,7 +13,7 @@ from apps.products.models import Product
 
 class ProductImageRequestSerializer(serializers.Serializer):
 
-    image = serializers.FileField()
+    image = serializers.ImageField()
 
     alt_text = serializers.CharField(
         required=False,
@@ -52,7 +54,7 @@ class ProductOptionRequestSerializer(serializers.Serializer):
 
 class VariantImageRequestSerializer(serializers.Serializer):
 
-    image = serializers.FileField()
+    image = serializers.ImageField()
 
     alt_text = serializers.CharField(
         required=False,
@@ -125,6 +127,95 @@ class ProductVariantRequestSerializer(serializers.Serializer):
         required=False
     )
 
+    # =====================================================
+    # SKU VALIDATION
+    # =====================================================
+
+    def validate_sku(self, value):
+
+        value = value.strip()
+
+        if len(value) < 3:
+
+            raise serializers.ValidationError(
+                "SKU is too short"
+            )
+
+        if ProductVariant.objects.filter(
+            sku=value
+        ).exists():
+
+            raise serializers.ValidationError(
+                "SKU already exists"
+            )
+
+        return value
+
+    # =====================================================
+    # BARCODE VALIDATION
+    # =====================================================
+
+    def validate_barcode(self, value):
+
+        if value:
+
+            value = value.strip()
+
+            if len(value) < 3:
+
+                raise serializers.ValidationError(
+                    "Barcode is too short"
+                )
+
+        return value
+
+    # =====================================================
+    # VARIANT VALIDATION
+    # =====================================================
+
+    def validate(self, attrs):
+
+        option1 = attrs.get("option1")
+        option2 = attrs.get("option2")
+        option3 = attrs.get("option3")
+
+        if not option1 and (option2 or option3):
+
+            raise serializers.ValidationError(
+                "Option1 is required if option2 or option3 is used"
+            )
+
+        price = attrs.get("price")
+
+        if price <= 0:
+
+            raise serializers.ValidationError(
+                "Price must be greater than zero"
+            )
+
+        compare_at_price = attrs.get(
+            "compare_at_price"
+        )
+
+        if (
+            compare_at_price and
+            compare_at_price <= price
+        ):
+
+            raise serializers.ValidationError(
+                "Compare at price must be greater than price"
+            )
+
+        images = attrs.get("images", [])
+
+        if len(images) > 5:
+
+            raise serializers.ValidationError(
+                "Maximum 5 variant images allowed"
+            )
+
+        return attrs
+
 
 # =========================================================
 # PRODUCT CREATE
@@ -132,10 +223,10 @@ class ProductVariantRequestSerializer(serializers.Serializer):
 
 class ProductCreateSerializer(serializers.ModelSerializer):
 
-    category_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        required=False,
-        allow_empty=True
+    categories = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        many=True,
+        required=False
     )
 
     images = ProductImageRequestSerializer(
@@ -178,7 +269,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "is_on_sale",
 
             # RELATIONS
-            "category_ids",
+            "categories",
 
             # NESTED
             "images",
@@ -187,34 +278,39 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         ]
 
     # =====================================================
-    # VALIDATE TITLE
+    # TITLE VALIDATION
     # =====================================================
 
     def validate_title(self, value):
 
-        if len(value.strip()) < 3:
+        value = value.strip()
+
+        if len(value) < 3:
+
             raise serializers.ValidationError(
                 "Product title is too short"
-            )
-
-        return value.strip()
-
-    # =====================================================
-    # VALIDATE CATEGORY IDS
-    # =====================================================
-
-    def validate_category_ids(self, value):
-
-        if len(set(value)) != len(value):
-
-            raise serializers.ValidationError(
-                "Duplicate category ids are not allowed"
             )
 
         return value
 
     # =====================================================
-    # VALIDATE VARIANTS
+    # CATEGORY VALIDATION
+    # =====================================================
+
+    def validate_categories(self, value):
+
+        ids = [category.id for category in value]
+
+        if len(ids) != len(set(ids)):
+
+            raise serializers.ValidationError(
+                "Duplicate categories are not allowed"
+            )
+
+        return value
+
+    # =====================================================
+    # VARIANTS VALIDATION
     # =====================================================
 
     def validate_variants(self, value):
@@ -238,7 +334,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         if len(images) > 10:
 
             raise serializers.ValidationError({
-                "images": "Maximum 10 product images allowed"
+                "images":
+                "Maximum 10 product images allowed"
             })
 
         return attrs

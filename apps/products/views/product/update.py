@@ -116,7 +116,7 @@ class ProductUpdateAPIView(APIView):
         # -------------------------------------------------
 
         json_fields = [
-            "category_ids",
+            "categories",
             "options",
             "variants",
         ]

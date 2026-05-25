@@ -46,7 +46,7 @@ class ProductCreateAPIView(APIView):
         # =====================================================
 
         json_fields = [
-            "category_ids",
+            "categories",
             "options",
             "variants",
         ]
@@ -113,7 +113,7 @@ class ProductCreateAPIView(APIView):
             variant["images"] = parsed_variant_images
 
         # =====================================================
-        # SERIALIZE
+        # SERIALIZER
         # =====================================================
 
         serializer = ProductCreateSerializer(
