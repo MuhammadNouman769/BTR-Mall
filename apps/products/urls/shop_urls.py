@@ -11,6 +11,6 @@ urlpatterns = [
     path("", ShopListAPIView.as_view()),          # GET all
     path("create/", ShopCreateAPIView.as_view()), # POST create
     path("<int:pk>/", ShopDetailAPIView.as_view()), # GET detail
-    path("<int:pk>/update/", ShopUpdateAPIView.as_view()), # PATCH
+    path("update/", ShopUpdateAPIView.as_view()), # PATCH
     path("<int:pk>/delete/", ShopDeleteAPIView.as_view()), # soft delete
 ]
