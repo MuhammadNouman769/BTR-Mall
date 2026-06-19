@@ -16,6 +16,11 @@ from drf_spectacular.views import (
     SpectacularRedocView
 )
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 
 # ================= MAIN URLS =====================
 
@@ -25,7 +30,11 @@ urlpatterns = [
     # ================= USERS =================
     path('', include('apps.main.urls')),
     path('api/auth/', include('apps.users.urls')),
-
+    
+    # ================= Tokens ========================
+    path('api/token/', TokenObtainPairView.as_view()),
+    path('api/token/refresh/', TokenRefreshView.as_view()),
+    
     # ================= PRODUCTS CORE =================
     path('api/shops/', include('apps.products.urls.shop_urls')),
     path('api/products/', include('apps.products.urls.product_urls')),
