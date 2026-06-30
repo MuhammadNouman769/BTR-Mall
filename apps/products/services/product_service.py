@@ -316,9 +316,9 @@ class ProductService:
         # -----------------------------------------------------
         # VALIDATIONS
         # -----------------------------------------------------
-        categories = ProductService.validate_categories(
-            category_ids
-        )
+        categories = validated_data.pop("categories", [])
+        if categories:
+            product.categories.set(categories)
 
         ProductService.validate_images(images)
 

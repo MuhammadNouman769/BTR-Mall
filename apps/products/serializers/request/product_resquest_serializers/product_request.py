@@ -3,27 +3,9 @@
 from rest_framework import serializers
 
 from apps.products.models import Product
+from apps.products.models.product_image import ProductImage
 from apps.products.models.category import Category
 from apps.products.models.variant import ProductVariant
-
-
-# =========================================================
-# PRODUCT IMAGE
-# =========================================================
-
-class ProductImageRequestSerializer(serializers.Serializer):
-
-    image = serializers.ImageField()
-
-    alt_text = serializers.CharField(
-        required=False,
-        allow_blank=True
-    )
-
-    position = serializers.IntegerField(
-        required=False,
-        default=0
-    )
 
 
 # =========================================================
@@ -217,6 +199,26 @@ class ProductVariantRequestSerializer(serializers.Serializer):
         return attrs
 
 
+
+# =========================================================
+# PRODUCT IMAGE
+# =========================================================
+
+class ProductImageRequestSerializer(serializers.Serializer):
+
+    image = serializers.ImageField()
+
+    alt_text = serializers.CharField(
+        required=False,
+        allow_blank=True
+    )
+
+    position = serializers.IntegerField(
+        required=False,
+        default=0
+    )
+
+
 # =========================================================
 # PRODUCT CREATE
 # =========================================================
@@ -229,9 +231,10 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         required=False
     )
 
-    images = ProductImageRequestSerializer(
-        many=True,
-        required=False
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        required=False,
+        write_only=True
     )
 
     options = ProductOptionRequestSerializer(
@@ -339,3 +342,5 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             })
 
         return attrs
+    
+    

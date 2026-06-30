@@ -38,6 +38,11 @@ class ProductCreateAPIView(APIView):
     ]
 
     def post(self, request):
+        print(type(request.data.get("variants")))
+        print(request.data.get("variants"))
+
+        print(type(request.FILES.get("variants")))
+        print(request.FILES.get("variants"))
 
         data = request.data.copy()
 

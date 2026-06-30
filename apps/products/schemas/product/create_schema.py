@@ -1,24 +1,21 @@
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiExample,
-    OpenApiResponse,
-    OpenApiTypes
+    OpenApiRequest,
 )
 
 from apps.products.serializers.request.product_resquest_serializers.product_request import (
-    ProductCreateSerializer
+    ProductCreateSerializer,
 )
 
 from apps.products.serializers.response.product_response_serializers.product_response import (
-    ProductDetailResponseSerializer
+    ProductDetailResponseSerializer,
 )
 
 
 product_create_schema = extend_schema(
-
     tags=["Products"],
     summary="Create Product",
-
     description="""
 Create a complete ecommerce product with:
 
@@ -30,42 +27,59 @@ Create a complete ecommerce product with:
 - Variant images (file upload)
 """,
 
-    request=ProductCreateSerializer,
+    request=OpenApiRequest(
+        request=ProductCreateSerializer,
+        encoding={
+            "images": {"contentType": "image/*"},
+            "variants": {"contentType": "application/json"},
+            "options": {"contentType": "application/json"},
+        },
+    ),
 
     responses={
-        201: ProductDetailResponseSerializer
+        201: ProductDetailResponseSerializer,
     },
 
     examples=[
-
         OpenApiExample(
-            name="Multipart Upload Example",
+            name="Multipart Form Data",
+            request_only=True,
             value={
                 "title": "iPhone 15 Pro",
                 "short_description": "Latest Apple flagship phone",
                 "description_html": "<p>Premium device</p>",
                 "brand": "Apple",
-
                 "categories": [1, 2],
-
-                "images": "(file upload in form-data)",
-
+                "images": [
+                    {
+                        "image": "<FILE>",
+                        "alt_text": "Front View",
+                        "position": 1,
+                    }
+                ],
                 "options": [
                     {
                         "name": "Color",
-                        "values": [{"value": "Black"}]
+                        "values": [
+                            {
+                                "value": "Black"
+                            }
+                        ]
                     }
                 ],
-
                 "variants": [
                     {
                         "sku": "IP15-BLK-128",
                         "price": "250000",
                         "stock_quantity": 10,
-                        "images": "(file upload in nested form-data)"
+                        "images": [
+                            {
+                                "image": "<FILE>"
+                            }
+                        ],
                     }
-                ]
-            }
-        )
-    ]
+                ],
+            },
+        ),
+    ],
 )
