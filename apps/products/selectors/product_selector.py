@@ -1,22 +1,11 @@
 # apps/products/selectors/product_selector.py
 
-from django.db.models import (
-    Prefetch,
-    Q,
-    Min,
-    Max,
-)
+from django.db.models import (Prefetch,Q,Min,Max,)
 
-from apps.products.models import (
-    Product,
-    ProductVariant,
-)
+from apps.products.models import (Product,ProductVariant,)
+from apps.common.enums import (ProductStatus,UserRoleChoices,)
 
-from apps.common.enums import (
-    ProductStatus,
-    UserRoleChoices,
-)
-
+from django.contrib.auth.models import AnonymousUser
 
 class ProductSelector:
 
@@ -82,18 +71,19 @@ class ProductSelector:
     @classmethod
     def get_role_based_queryset(cls, user):
 
-        if user and user.is_staff:
-
+        # Anonymous user
+        if not user or not user.is_authenticated:
+            return cls.public_products()
+        # Admin
+        if user.is_staff:
             return cls.admin_products()
-
-        elif (
-            user and
-            user.role == UserRoleChoices.SELLER and
-            hasattr(user, "shop")
+        # Seller
+        if (
+                getattr(user, "role", None) == UserRoleChoices.SELLER
+                and hasattr(user, "shop")
         ):
-
             return cls.seller_products(user)
-
+        # Customer / Other authenticated users
         return cls.public_products()
 
     # =========================================================
