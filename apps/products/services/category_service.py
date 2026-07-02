@@ -1,91 +1,62 @@
-from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from apps.products.models import Category
 
+from apps.products.validators.category_validator import (
+    CategoryValidator,
+)
+
 
 class CategoryService:
 
-    # ================= CREATE =================
+    # =====================================================
+    # CREATE CATEGORY
+    # =====================================================
     @staticmethod
     @transaction.atomic
     def create(validated_data):
 
-        parent = validated_data.get("parent")
+        CategoryValidator.validate_create(
+            validated_data
+        )
 
-        # Prevent self-parent
-        if parent and parent.pk == validated_data.get("id"):
-            raise ValidationError({
-                "error": "Category cannot be its own parent"
-            })
+        return Category.objects.create(
+            **validated_data
+        )
 
-        category = Category.objects.create(**validated_data)
-
-        return category
-
-    # ================= UPDATE =================
+    # =====================================================
+    # UPDATE CATEGORY
+    # =====================================================
     @staticmethod
     @transaction.atomic
     def update(instance, validated_data):
 
-        parent = validated_data.get("parent", instance.parent)
+        CategoryValidator.validate_update(
+            instance,
+            validated_data,
+        )
 
-        # Prevent self-parent
-        if parent and parent == instance:
-            raise ValidationError({
-                "error": "Category cannot be parent of itself"
-            })
-
-        # Prevent circular hierarchy
-        CategoryService._validate_no_cycle(instance, parent)
-
-        # Safe update
         for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+
+            setattr(
+                instance,
+                attr,
+                value,
+            )
 
         instance.save()
 
         return instance
 
-    # ================= DELETE =================
+    # =====================================================
+    # DELETE CATEGORY
+    # =====================================================
     @staticmethod
     @transaction.atomic
     def delete(instance):
 
-        # Prevent delete if subcategories exist
-        if instance.children.exists():
-            raise ValidationError({
-                "error": (
-                    "Cannot delete category with subcategories"
-                )
-            })
+        CategoryValidator.validate_delete(
+            instance
+        )
 
-        # Prevent delete if products exist
-        if instance.products.exists():
-            raise ValidationError({
-                "error": (
-                    "This category contains products. "
-                    "Move or delete products first."
-                )
-            })
-
-        # Soft delete
         instance.delete()
-
-    # ================= VALIDATION =================
-    @staticmethod
-    def _validate_no_cycle(instance, parent):
-        """
-        Prevent circular category structure
-        """
-
-        current = parent
-
-        while current:
-
-            if current == instance:
-                raise ValidationError({
-                    "error": "Circular category structure detected"
-                })
-
-            current = current.parent

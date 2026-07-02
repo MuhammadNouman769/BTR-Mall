@@ -1,149 +1,127 @@
+# apps/products/services/option_service.py
+
 from django.db import transaction
-from rest_framework.exceptions import ValidationError
 
 from apps.products.models import (
     ProductOption,
     ProductOptionValue,
 )
 
+from apps.products.validators.product_validator import (
+    ProductValidator,
+)
+
+from apps.products.validators.option_validator import (
+    OptionValidator,
+)
+
 
 class ProductOptionService:
 
     # =====================================================
-    #                   CREATE OPTION
+    # CREATE OPTION
     # =====================================================
     @staticmethod
     @transaction.atomic
     def create_option(user, validated_data):
 
-        values_data = validated_data.pop("values", [])
+        values = validated_data.pop("values", [])
 
         product = validated_data.get("product")
 
-        # =========================================
-        #           OWNERSHIP VALIDATION
-        # =========================================
-        if product.shop.owner != user:
-            raise ValidationError({
-                "error": "You cannot add options to this product"
-            })
+        ProductValidator.validate_owner(
+            product,
+            user,
+        )
 
-        # =========================================
-        #         DUPLICATE VALUE CHECK
-        # =========================================
-        values = [v["value"].strip().lower() for v in values_data]
+        OptionValidator.validate_values(
+            values
+        )
 
-        if len(values) != len(set(values)):
-            raise ValidationError({
-                "error": "Duplicate option values are not allowed"
-            })
-
-        # =========================================
-        #              CREATE OPTION
-        # =========================================
         option = ProductOption.objects.create(
             **validated_data
         )
 
-        # =========================================
-        #           BULK CREATE VALUES
-        # =========================================
-        option_values = []
-
-        for index, val in enumerate(values_data):
-
-            option_values.append(
-                ProductOptionValue(
-                    option=option,
-                    value=val["value"].strip(),
-                    position=val.get("position", index + 1)
-                )
+        ProductOptionValue.objects.bulk_create([
+            ProductOptionValue(
+                option=option,
+                value=value["value"].strip(),
+                position=value.get(
+                    "position",
+                    index + 1,
+                ),
             )
-
-        ProductOptionValue.objects.bulk_create(
-            option_values
-        )
+            for index, value in enumerate(values)
+        ])
 
         return option
 
     # =====================================================
-    #                  UPDATE OPTION
+    # UPDATE OPTION
     # =====================================================
     @staticmethod
     @transaction.atomic
-    def update_option(user, instance, validated_data):
+    def update_option(
+        user,
+        instance,
+        validated_data,
+    ):
 
-        values_data = validated_data.pop("values", None)
+        values = validated_data.pop(
+            "values",
+            None,
+        )
 
-        # =========================================
-        #          OWNERSHIP VALIDATION
-        # =========================================
-        if instance.product.shop.owner != user:
-            raise ValidationError({
-                "error": "You cannot update this option"
-            })
+        ProductValidator.validate_owner(
+            instance.product,
+            user,
+        )
 
-        # =========================================
-        #             UPDATE FIELDS
-        # =========================================
         for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+
+            setattr(
+                instance,
+                attr,
+                value,
+            )
 
         instance.save()
 
-        # =========================================
-        #             UPDATE VALUES
-        # =========================================
-        if values_data is not None:
+        if values is not None:
 
-            values = [
-                v["value"].strip().lower()
-                for v in values_data
-            ]
+            OptionValidator.validate_values(
+                values
+            )
 
-            if len(values) != len(set(values)):
-                raise ValidationError({
-                    "error": "Duplicate option values are not allowed"
-                })
-
-            # remove old values
             instance.values.all().delete()
 
-            # bulk create new values
-            option_values = []
-
-            for index, val in enumerate(values_data):
-
-                option_values.append(
-                    ProductOptionValue(
-                        option=instance,
-                        value=val["value"].strip(),
-                        position=val.get(
-                            "position",
-                            index + 1
-                        )
-                    )
+            ProductOptionValue.objects.bulk_create([
+                ProductOptionValue(
+                    option=instance,
+                    value=value["value"].strip(),
+                    position=value.get(
+                        "position",
+                        index + 1,
+                    ),
                 )
-
-            ProductOptionValue.objects.bulk_create(
-                option_values
-            )
+                for index, value in enumerate(values)
+            ])
 
         return instance
 
     # =====================================================
-    #                  DELETE OPTION
+    # DELETE OPTION
     # =====================================================
     @staticmethod
     @transaction.atomic
-    def delete_option(user, instance):
+    def delete_option(
+        user,
+        instance,
+    ):
 
-        # =========================================
-        #          OWNERSHIP VALIDATION
-        # =========================================
-        if instance.product.shop.owner != user:
-            raise ValidationError({
-                "error": "You cannot delete this option"
-            })
+        ProductValidator.validate_owner(
+            instance.product,
+            user,
+        )
 
         instance.delete()

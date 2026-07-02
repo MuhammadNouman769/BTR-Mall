@@ -1,37 +1,22 @@
 # apps/products/views/product/update.py
 
-import json
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import (
-    MultiPartParser,
-    FormParser,
-    JSONParser,
-)
 from rest_framework import status
 
 from drf_spectacular.utils import extend_schema_view
-
+from apps.common.enums import UserRoleChoices
 from apps.products.models import Product
-
+from apps.products.parsers.product_parser import ProductRequestParser
+from apps.products.schemas.product.update_schema import product_update_schema
 from apps.products.serializers.request.product_resquest_serializers.product_request import (
     ProductCreateSerializer,
 )
-
 from apps.products.serializers.response.product_response_serializers.product_response import (
     ProductDetailResponseSerializer,
 )
-
 from apps.products.services.product_service import ProductService
-
-from apps.products.schemas.product.update_schema import (
-    product_update_schema,
-)
-
-from apps.common.enums import UserRoleChoices
-
 
 @extend_schema_view(
     put=product_update_schema,
@@ -40,31 +25,23 @@ from apps.common.enums import UserRoleChoices
 class ProductUpdateAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
-
-    parser_classes = [
-        JSONParser,
-        MultiPartParser,
-        FormParser,
-    ]
+    parser_classes = ProductRequestParser.parser_classes
 
     # =====================================================
     # PUT
     # =====================================================
-
-    def put(self, request, id):
+    def put(self, request, pk):
 
         return self.update(
             request=request,
-            id=id,
+            pk=pk,
             partial=False,
         )
 
     # =====================================================
     # PATCH
     # =====================================================
-
     def patch(self, request, id):
-
         return self.update(
             request=request,
             id=id,
@@ -74,21 +51,14 @@ class ProductUpdateAPIView(APIView):
     # =====================================================
     # UPDATE
     # =====================================================
-
     def update(self, request, id, partial=False):
-
-        import pdb
-        pdb.set_trace()
-
         # -------------------------------------------------
         # ROLE VALIDATION
         # -------------------------------------------------
-
         if request.user.role != UserRoleChoices.SELLER:
-
             return Response(
                 {
-                    "error": "Only sellers can update products"
+                    "error": "Only sellers can update products",
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -96,121 +66,30 @@ class ProductUpdateAPIView(APIView):
         # -------------------------------------------------
         # GET PRODUCT
         # -------------------------------------------------
-
         try:
-
             product = Product.objects.get(
                 id=id,
                 shop=request.user.shop,
             )
-
         except Product.DoesNotExist:
-
             return Response(
                 {
-                    "error": "Product not found"
+                    "error": "Product not found",
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
-
         # -------------------------------------------------
-        # COPY REQUEST DATA
+        # PARSE REQUEST
         # -------------------------------------------------
-
-        data = request.data.copy()
-
-        # -------------------------------------------------
-        # PARSE JSON FIELDS
-        # -------------------------------------------------
-
-        json_fields = [
-            "categories",
-            "options",
-            "variants",
-        ]
-
-        for field in json_fields:
-
-            value = data.get(field)
-
-            if value and isinstance(value, str):
-
-                try:
-
-                    data[field] = json.loads(value)
-
-                except json.JSONDecodeError:
-
-                    return Response(
-                        {
-                            "error": f"Invalid JSON format for '{field}'"
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-        # -------------------------------------------------
-        # HANDLE PRODUCT IMAGES
-        # -------------------------------------------------
-
-        product_images = request.FILES.getlist("images")
-
-        if product_images:
-
-            parsed_images = []
-
-            for image in product_images:
-
-                parsed_images.append(
-                    {
-                        "image": image,
-                        "alt_text": "",
-                        "position": 0,
-                    }
-                )
-
-            data["images"] = parsed_images
-
-        # -------------------------------------------------
-        # HANDLE VARIANT IMAGES
-        # -------------------------------------------------
-
-        variants = data.get("variants", [])
-
-        if isinstance(variants, list):
-
-            for index, variant in enumerate(variants):
-
-                variant_images = request.FILES.getlist(
-                    f"variants[{index}][images]"
-                )
-
-                if variant_images:
-
-                    parsed_variant_images = []
-
-                    for image in variant_images:
-
-                        parsed_variant_images.append(
-                            {
-                                "image": image,
-                                "alt_text": "",
-                                "is_main": False,
-                                "position": 0,
-                            }
-                        )
-
-                    variant["images"] = parsed_variant_images
-
+        data = ProductRequestParser.parse(request)
         # -------------------------------------------------
         # SERIALIZER
         # -------------------------------------------------
-
         serializer = ProductCreateSerializer(
             product,
             data=data,
             partial=partial,
         )
-
         serializer.is_valid(
             raise_exception=True,
         )
@@ -218,16 +97,14 @@ class ProductUpdateAPIView(APIView):
         # -------------------------------------------------
         # UPDATE PRODUCT
         # -------------------------------------------------
-
         product = ProductService.update_product(
+            user=request.user,
             instance=product,
             validated_data=serializer.validated_data,
         )
-
         # -------------------------------------------------
         # RESPONSE
         # -------------------------------------------------
-
         return Response(
             {
                 "message": "Product updated successfully",

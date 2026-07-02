@@ -1,146 +1,86 @@
-from django.db import transaction
-from rest_framework.exceptions import ValidationError
 
-from apps.products.models import ProductVariant, VariantImage
+
+from django.db import transaction
+
+from apps.products.models import ProductVariant
+from apps.products.validators.product_validator import ProductValidator
+from apps.products.validators.variant_validator import VariantValidator
+from apps.products.services.variant_image_service import VariantImageService
+
 
 
 class VariantService:
-
-    # =========================================================
-    #                     CREATE VARIANT
-    # =========================================================
+    # =====================================================
+    # CREATE VARIANT
+    # =====================================================
     @staticmethod
     @transaction.atomic
     def create_variant(user, validated_data):
-
-        images_data = validated_data.pop("images", [])
-
+        images = validated_data.pop("images", [])
         product = validated_data.get("product")
-
-        # =========================================
-        #          OWNERSHIP VALIDATION
-        # =========================================
-        if product.shop.owner != user:
-            raise ValidationError({
-                "error": "You cannot add variants to this product"
-            })
-
-        # =========================================
-        #          MAIN IMAGE VALIDATION
-        # =========================================
-        main_images_count = sum(
-            1 for img in images_data if img.get("is_main")
+        ProductValidator.validate_owner(
+            product,
+            user,
         )
-
-        if main_images_count > 1:
-            raise ValidationError({
-                "error": "Only one main image is allowed"
-            })
-
-        # =========================================
-        #            CREATE VARIANT
-        # =========================================
+        VariantValidator.validate(
+            [
+                {
+                    **validated_data,
+                    "images": images,
+                }
+            ]
+        )
         variant = ProductVariant.objects.create(
             **validated_data
         )
-
-        # =========================================
-        #             CREATE IMAGES
-        # =========================================
-        variant_images = []
-
-        for index, img in enumerate(images_data):
-
-            variant_images.append(
-                VariantImage(
-                    variant=variant,
-                    image=img["image"],
-                    alt_text=img.get("alt_text", ""),
-                    is_main=img.get("is_main", False),
-                    position=index + 1
-                )
-            )
-
-        VariantImage.objects.bulk_create(variant_images)
-
+        VariantImageService.create_images(
+            variant,
+            images,
+        )
         return variant
-    # =========================================================
-    #                     UPDATE VARIANT
-    # =========================================================
 
+    # =====================================================
+    # UPDATE VARIANT
+    # =====================================================
     @staticmethod
     @transaction.atomic
     def update_variant(user, instance, validated_data):
-
-        images_data = validated_data.pop("images", None)
-
-        # =========================================
-        #          OWNERSHIP VALIDATION
-        # =========================================
-        if instance.product.shop.owner != user:
-            raise ValidationError({
-                "error": "You cannot update this variant"
-            })
-
-        # =========================================
-        #          UPDATE FIELDS
-        # =========================================
+        images = validated_data.pop("images", None)
+        ProductValidator.validate_owner(
+            instance.product,
+            user,
+        )
+        if images is not None:
+            VariantValidator.validate(
+                [
+                    {
+                        **validated_data,
+                        "images": images,
+                    }
+                ],
+                product=instance.product,
+            )
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-
         instance.save()
-
-        # =========================================
-        #          UPDATE IMAGES
-        # =========================================
-        if images_data is not None:
-
-            main_images_count = sum(
-                1 for img in images_data if img.get("is_main")
+        if images is not None:
+            VariantImageService.update_images(
+                instance,
+                images,
             )
-
-            if main_images_count > 1:
-                raise ValidationError({
-                    "error": "Only one main image is allowed"
-                })
-
-            # old images remove
-            instance.variant_images.all().delete()
-
-            # bulk create new images
-            variant_images = []
-
-            for index, img in enumerate(images_data):
-
-                variant_images.append(
-                    VariantImage(
-                        variant=instance,
-                        image=img["image"],
-                        alt_text=img.get("alt_text", ""),
-                        is_main=img.get("is_main", False),
-                        position=index + 1
-                    )
-                )
-
-            VariantImage.objects.bulk_create(
-                variant_images
-            )
-
         return instance
 
-    # =========================================================
-    #                    DELETE VARIANT
-    # =========================================================
+    # =====================================================
+    # DELETE VARIANT
+    # =====================================================
     @staticmethod
     @transaction.atomic
     def delete_variant(user, instance):
-
-        # =========================================
-        #          OWNERSHIP VALIDATION
-        # =========================================
-        if instance.product.shop.owner != user:
-            raise ValidationError({
-                "error": "You cannot delete this variant"
-            })
-
+        ProductValidator.validate_owner(
+            instance.product,
+            user,
+        )
+        VariantImageService.delete_images(
+            instance,
+        )
         instance.delete()

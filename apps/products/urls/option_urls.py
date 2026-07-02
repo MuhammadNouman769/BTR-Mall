@@ -7,11 +7,10 @@ from apps.products.views.option.delete import OptionDeleteAPIView
 from apps.products.views.option.detail import OptionDetailAPIView
 
 
-
 urlpatterns = [
-    path("", OptionListAPIView.as_view()),
-    path("create/", OptionCreateAPIView.as_view()),
-    path("<int:pk>/", OptionDetailAPIView.as_view()),
-    path("<int:pk>/update/", OptionUpdateAPIView.as_view()),
-    path("<int:pk>/delete/", OptionDeleteAPIView.as_view()),
+    path("",OptionListAPIView.as_view(),name="option-list",),
+    path("create/",OptionCreateAPIView.as_view(),name="option-create",),
+    path("<int:pk>/",OptionDetailAPIView.as_view(),name="option-detail",),
+    path("<int:pk>/update/",OptionUpdateAPIView.as_view(),name="option-update",),
+    path("<int:pk>/delete/",OptionDeleteAPIView.as_view(),name="option-delete",),
 ]

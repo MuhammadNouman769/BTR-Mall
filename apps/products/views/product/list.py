@@ -10,7 +10,6 @@ from apps.products.serializers.response.product_response_serializers.product_res
 from apps.products.pagination import ProductPagination
 from apps.products.schemas.product.list_schema import product_list_schema
 
-
 @extend_schema_view(
     get=product_list_schema
 )
@@ -23,11 +22,8 @@ class ProductListAPIView(ListAPIView):
     # =====================================================
     # QUERYSET
     # =====================================================
-
     def get_queryset(self):
-
         user = self.request.user if self.request.user.is_authenticated else None
-
         return ProductSelector.list_products(
             filters=self.request.query_params.dict(),
             user=user
