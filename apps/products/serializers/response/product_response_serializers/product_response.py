@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 
 from apps.products.models import (
     Product,
@@ -7,117 +8,28 @@ from apps.products.models import (
     ProductOption,
     ProductOptionValue,
     VariantImage,
+    Category,
 )
-from rest_framework.pagination import PageNumberPagination
-from drf_spectacular.utils import extend_schema_field
-
-
-
-# =========================================================
-# PRODUCT IMAGE
-# =========================================================
-
-class ProductImageResponseSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ProductImage
-
-        fields = [
-            "id",
-            "image",
-            "alt_text",
-            "position",
-        ]
-
-
-# =========================================================
-# VARIANT IMAGE
-# =========================================================
-
-class VariantImageInProductSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = VariantImage
-
-        fields = ["id", "image", "alt_text", "is_main", "position",]
-        ref_name = "VariantImageInProductSerializer"
-
-
-# =========================================================
-# OPTION VALUE
-# =========================================================
-
-class ProductOptionValueInProductSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ProductOptionValue
-
-        fields = ["id", "value", "position"]
-        ref_name = "ProductOptionValueInProductSerializer"
-
-
-# =========================================================
-# OPTION
-# =========================================================
-
-class ProductOptionInProductSerializer(serializers.ModelSerializer):
-
-    values = ProductOptionValueInProductSerializer(
-        many=True,
-        read_only=True
-    )
-
-    class Meta:
-        model = ProductOption
-
-        fields = [ "id", "name", "position", "values",]
-        ref_name = "ProductOptionInProductSerializer"
-
-
-# =========================================================
-# VARIANT
-# =========================================================
-
-class ProductVariantResponseSerializer(serializers.ModelSerializer):
-
-    variant_images = VariantImageInProductSerializer(
-        many=True,
-        read_only=True
-    )
-
-    variant_name = serializers.CharField(
-        source="get_variant_name",
-        read_only=True
-    )
-
-    class Meta:
-        model = ProductVariant
-
-        fields = [
-            "id",
-
-            "sku",
-            "barcode",
-
-            "price",
-            "compare_at_price",
-
-            "stock_quantity",
-
-            "track_inventory",
-            "allow_backorder",
-
-            "variant_name",
-
-            "variant_images",
-        ]
-
+from apps.products.serializers.response.option_response_serializers.option_response import (
+        ProductOptionResponseSerializer,
+)
+from apps.products.serializers.response.product_image_response_serializers.product_image_response import (
+ProductImageResponseSerializer,
+)
+from apps.products.serializers.response.variant_response_serializers.variant_response import (
+ProductVariantResponseSerializer,
+)
+from apps.products.serializers.response.categories_response_serializers.category_response import (
+CategorySerializer
+)
 
 # =========================================================
 # PRODUCT LIST
 # =========================================================
 
-class ProductListResponseSerializer(serializers.ModelSerializer):
+class ProductListResponseSerializer(
+    serializers.ModelSerializer
+):
 
     main_image = serializers.SerializerMethodField()
 
@@ -143,45 +55,71 @@ class ProductListResponseSerializer(serializers.ModelSerializer):
             "total_reviews",
         ]
 
-    @extend_schema_field(serializers.CharField(allow_null=True))
+    @extend_schema_field(
+        serializers.CharField(
+            allow_null=True
+        )
+    )
     def get_main_image(self, obj):
-        image = obj.images.first()
+
+        image = (
+            obj.images
+            .order_by("position")
+            .first()
+        )
+
         if image:
             return image.image.url
+
         return None
 
-
-    @extend_schema_field(serializers.FloatField())
+    @extend_schema_field(
+        serializers.DecimalField(
+            max_digits=10,
+            decimal_places=2,
+            allow_null=True,
+        )
+    )
     def get_price(self, obj):
-        variant = obj.variants.first()
+
+        variant = (
+            obj.variants
+            .order_by("position")
+            .first()
+        )
+
         if variant:
             return variant.price
-        return 0
+
+        return None
 
 
 # =========================================================
 # PRODUCT DETAIL
 # =========================================================
 
-class ProductDetailResponseSerializer(serializers.ModelSerializer):
+class ProductDetailResponseSerializer(
+    serializers.ModelSerializer
+):
 
     images = ProductImageResponseSerializer(
         many=True,
-        read_only=True
+        read_only=True,
     )
 
-    options = ProductOptionInProductSerializer(
+    options = ProductOptionResponseSerializer(
         many=True,
-        read_only=True
+        read_only=True,
     )
 
     variants = ProductVariantResponseSerializer(
         many=True,
-        read_only=True
+        read_only=True,
     )
 
-    categories = serializers.StringRelatedField(
-        many=True
+    categories = ProductVariantResponseSerializer(
+        many=True,
+        read_only=True,
     )
 
     class Meta:
@@ -191,21 +129,40 @@ class ProductDetailResponseSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "handle",
+
             "brand",
+
             "product_status",
+
             "description_html",
             "short_description",
+
             "images",
+
             "options",
+
             "variants",
+
             "categories",
-        ] 
-        
-        
+
+            "average_rating",
+
+            "total_reviews",
+        ]
 
 
 class PaginatedProductResponseSerializer(serializers.Serializer):
-    page = serializers.IntegerField()
-    page_size = serializers.IntegerField()
-    results = ProductListResponseSerializer(many=True)
-        
+
+    count = serializers.IntegerField()
+
+    next = serializers.CharField(
+        allow_null=True,
+    )
+
+    previous = serializers.CharField(
+        allow_null=True,
+    )
+
+    results = ProductListResponseSerializer(
+        many=True,
+    )

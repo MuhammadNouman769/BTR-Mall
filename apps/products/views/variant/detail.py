@@ -1,36 +1,52 @@
-
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema_view
 
-from apps.products.selectors.variant_selector import ProductVariantSelector
-from apps.products.serializers.response.variant_response_serializers.variant_response import (
-    ProductVariantResponseInProductSerializer
+from apps.products.schemas.variant.detail_schema import (
+    variant_detail_schema,
 )
-from apps.products.schemas.variant.detail_schema import variant_detail_schema
+from apps.products.selectors.variant_selector import (
+    ProductVariantSelector,
+)
+from apps.products.serializers.response.variant_response_serializers.variant_response import (
+    ProductVariantResponseSerializer,
+)
 
-extend_schema_view(
-    detail=variant_detail_schema,
+
+@extend_schema_view(
+    get=variant_detail_schema,
 )
 class ProductVariantDetailAPIView(APIView):
 
-    @variant_detail_schema
+    # =====================================================
+    # VARIANT DETAIL
+    # =====================================================
+
     def get(self, request, pk):
 
-        variant = ProductVariantSelector.detail(pk)
+        variant = ProductVariantSelector.detail(
+            pk=pk,
+        )
+
         if not variant:
+
             return Response(
-                {"errors": "variant not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {
+                    "error": "Variant not found.",
+                },
+                status=status.HTTP_404_NOT_FOUND,
             )
-        serializer = ProductVariantResponseInProductSerializer(variant)
+
+        serializer = ProductVariantResponseSerializer(
+            variant,
+        )
 
         return Response(
             {
-                "message": "Variant Fetched successfully",
-                "data":serializer.data
+                "message": "Variant fetched successfully.",
+                "data": serializer.data,
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )

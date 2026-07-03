@@ -1,10 +1,16 @@
 from drf_spectacular.utils import extend_schema
+
 from apps.products.serializers.response.variant_response_serializers.variant_response import (
-    ProductVariantResponseInProductSerializer
+    ProductVariantListResponseSerializer,
 )
 
 
 variant_list_schema = extend_schema(
-    responses=ProductVariantResponseInProductSerializer(many=True),
-    description="List all product variants"
+    operation_id="variant_list",
+    tags=["Variants"],
+    summary="List Variants",
+    description="Retrieve a list of all product variants.",
+    responses={
+        200: ProductVariantListResponseSerializer,
+    },
 )

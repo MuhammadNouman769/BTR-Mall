@@ -4,7 +4,7 @@ from drf_spectacular.utils import (
     OpenApiResponse,
 )
 
-from apps.products.serializers.request.product_resquest_serializers.product_request import (
+from apps.products.serializers.request.product_request_serializers.product_request import (
     ProductCreateSerializer
 )
 

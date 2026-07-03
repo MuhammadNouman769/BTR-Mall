@@ -51,6 +51,7 @@ urlpatterns = [
     # ========================================================
 
     path("api/products/",include("apps.products.urls.product_urls"),),
+    path("api/product-images/",include("apps.products.urls.product_image_urls"),),
     path("api/categories/",include("apps.products.urls.category_urls"),),
     path("api/options/",include("apps.products.urls.option_urls"),),
     path("api/variants/",include("apps.products.urls.variant_urls"),),
