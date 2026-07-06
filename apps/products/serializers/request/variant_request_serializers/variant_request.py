@@ -6,10 +6,12 @@ from apps.products.models import ProductVariant
 class ProductVariantCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
+
         model = ProductVariant
 
         fields = [
-            "product",
+
+
             "sku",
             "barcode",
 
@@ -42,12 +44,12 @@ class ProductVariantCreateSerializer(serializers.ModelSerializer):
             )
 
         queryset = ProductVariant.objects.filter(
-            sku=value
+            sku=value,
         )
 
         if self.instance:
             queryset = queryset.exclude(
-                pk=self.instance.pk
+                pk=self.instance.pk,
             )
 
         if queryset.exists():
@@ -76,7 +78,7 @@ class ProductVariantCreateSerializer(serializers.ModelSerializer):
         return value
 
     # =====================================================
-    # GLOBAL VALIDATION
+    # VALIDATE
     # =====================================================
 
     def validate(self, attrs):

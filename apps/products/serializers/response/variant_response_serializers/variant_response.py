@@ -7,12 +7,13 @@ from apps.products.models import (
 
 
 # =========================================================
-# VARIANT IMAGE
+# VARIANT IMAGE RESPONSE
 # =========================================================
 
 class VariantImageResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
+
         model = VariantImage
 
         fields = [
@@ -39,12 +40,6 @@ class ProductVariantResponseSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-    images = VariantImageResponseSerializer(
-        source="variant_images",
-        many=True,
-        read_only=True,
-    )
-
     class Meta:
         model = ProductVariant
 
@@ -61,9 +56,22 @@ class ProductVariantResponseSerializer(serializers.ModelSerializer):
             "position",
             "variant_name",
             "is_in_stock",
-            "images",
         ]
 
+# =========================================================
+# CREATE / UPDATE RESPONSE
+# =========================================================
+
+class ProductVariantCreateUpdateResponseSerializer(serializers.Serializer):
+
+    message = serializers.CharField()
+
+    id = serializers.IntegerField()
+
+
+# =========================================================
+# DETAIL RESPONSE
+# =========================================================
 
 class ProductVariantDetailResponseSerializer(serializers.Serializer):
 
@@ -71,8 +79,9 @@ class ProductVariantDetailResponseSerializer(serializers.Serializer):
 
     data = ProductVariantResponseSerializer()
 
+
 # =========================================================
-# LIST API RESPONSE
+# LIST RESPONSE
 # =========================================================
 
 class ProductVariantListResponseSerializer(serializers.Serializer):
@@ -82,3 +91,12 @@ class ProductVariantListResponseSerializer(serializers.Serializer):
     data = ProductVariantResponseSerializer(
         many=True,
     )
+
+
+# =========================================================
+# DELETE RESPONSE
+# =========================================================
+
+class ProductVariantDeleteResponseSerializer(serializers.Serializer):
+
+    message = serializers.CharField()

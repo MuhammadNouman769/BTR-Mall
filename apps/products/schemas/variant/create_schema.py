@@ -9,6 +9,7 @@ from apps.products.serializers.request.variant_request_serializers.variant_reque
 
 
 variant_create_schema = extend_schema(
+
     tags=["Variants"],
 
     summary="Create Variant",
@@ -16,7 +17,7 @@ variant_create_schema = extend_schema(
     description="""
 Create a new product variant.
 
-Variant images are uploaded separately using the Variant Images API.
+Variant images are managed separately using the Variant Images API.
 """,
 
     request=ProductVariantCreateSerializer,
@@ -32,22 +33,24 @@ Variant images are uploaded separately using the Variant Images API.
                 "id": {
                     "type": "integer",
                     "example": 1
-                },
-            },
-        },
+                }
+            }
+        }
     },
 
     examples=[
         OpenApiExample(
             name="Create Variant",
-
+            request_only=True,
             value={
                 "product": 1,
+
                 "sku": "SKU-001",
                 "barcode": "123456789",
 
                 "option1": 1,
                 "option2": 2,
+                "option3": None,
 
                 "price": "1200.00",
                 "compare_at_price": "1500.00",
@@ -59,8 +62,6 @@ Variant images are uploaded separately using the Variant Images API.
 
                 "position": 1,
             },
-
-            request_only=True,
-        ),
+        )
     ],
 )

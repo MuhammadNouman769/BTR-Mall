@@ -11,7 +11,7 @@ from apps.products.selectors.variant_selector import (
     ProductVariantSelector,
 )
 from apps.products.serializers.response.variant_response_serializers.variant_response import (
-    ProductVariantResponseSerializer,
+    ProductVariantListResponseSerializer,
 )
 
 
@@ -28,15 +28,12 @@ class VariantListAPIView(APIView):
 
         variants = ProductVariantSelector.all()
 
-        serializer = ProductVariantResponseSerializer(
-            variants,
-            many=True,
-        )
-
         return Response(
-            {
-                "message": "Variants fetched successfully.",
-                "data": serializer.data,
-            },
+            ProductVariantListResponseSerializer(
+                {
+                    "message": "Variants fetched successfully.",
+                    "data": variants,
+                }
+            ).data,
             status=status.HTTP_200_OK,
         )

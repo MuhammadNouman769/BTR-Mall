@@ -11,7 +11,7 @@ from apps.products.selectors.variant_selector import (
     ProductVariantSelector,
 )
 from apps.products.serializers.response.variant_response_serializers.variant_response import (
-    ProductVariantResponseSerializer,
+    ProductVariantDetailResponseSerializer,
 )
 
 
@@ -21,7 +21,7 @@ from apps.products.serializers.response.variant_response_serializers.variant_res
 class ProductVariantDetailAPIView(APIView):
 
     # =====================================================
-    # VARIANT DETAIL
+    # GET VARIANT DETAIL
     # =====================================================
 
     def get(self, request, pk):
@@ -39,14 +39,12 @@ class ProductVariantDetailAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = ProductVariantResponseSerializer(
-            variant,
-        )
-
         return Response(
-            {
-                "message": "Variant fetched successfully.",
-                "data": serializer.data,
-            },
+            ProductVariantDetailResponseSerializer(
+                {
+                    "message": "Variant fetched successfully.",
+                    "data": variant,
+                }
+            ).data,
             status=status.HTTP_200_OK,
         )

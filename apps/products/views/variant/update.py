@@ -8,12 +8,19 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema_view
 
 from apps.products.models import ProductVariant
+
 from apps.products.schemas.variant.update_schema import (
     variant_update_schema,
 )
+
 from apps.products.serializers.request.variant_request_serializers.variant_request import (
     ProductVariantCreateSerializer,
 )
+
+from apps.products.serializers.response.variant_response_serializers.variant_response import (
+    ProductVariantResponseSerializer,
+)
+
 from apps.products.services.variant_service import (
     VariantService,
 )
@@ -71,7 +78,7 @@ class VariantUpdateAPIView(APIView):
 
             return Response(
                 {
-                    "error": "Variant not found.",
+                    "message": "Variant not found.",
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
@@ -107,7 +114,9 @@ class VariantUpdateAPIView(APIView):
         return Response(
             {
                 "message": "Variant updated successfully.",
-                "id": variant.id,
+                "data": ProductVariantResponseSerializer(
+                    variant
+                ).data,
             },
             status=status.HTTP_200_OK,
         )

@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+# apps/products/views/variant/delete.py
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -29,15 +29,37 @@ class VariantDeleteAPIView(APIView):
 
     def delete(self, request, pk):
 
-        variant = get_object_or_404(
-            ProductVariant,
-            pk=pk,
-        )
+        # -------------------------------------------------
+        # GET VARIANT
+        # -------------------------------------------------
+
+        try:
+
+            variant = ProductVariant.objects.get(
+                pk=pk,
+            )
+
+        except ProductVariant.DoesNotExist:
+
+            return Response(
+                {
+                    "error": "Variant not found.",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # -------------------------------------------------
+        # DELETE VARIANT
+        # -------------------------------------------------
 
         VariantService.delete_variant(
             user=request.user,
             instance=variant,
         )
+
+        # -------------------------------------------------
+        # RESPONSE
+        # -------------------------------------------------
 
         return Response(
             {

@@ -2,11 +2,15 @@ from drf_spectacular.utils import extend_schema
 
 
 variant_delete_schema = extend_schema(
+    operation_id="variant_delete",
+
     tags=["Variants"],
 
     summary="Delete Variant",
 
-    description="Delete an existing product variant.",
+    description="""
+Delete an existing product variant.
+""",
 
     responses={
         200: {

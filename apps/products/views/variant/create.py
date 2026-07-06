@@ -1,5 +1,3 @@
-# apps/products/views/variant/create.py
-
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -31,10 +29,6 @@ class VariantCreateAPIView(APIView):
 
     def post(self, request):
 
-        # -------------------------------------------------
-        # VALIDATE REQUEST
-        # -------------------------------------------------
-
         serializer = ProductVariantCreateSerializer(
             data=request.data,
         )
@@ -43,18 +37,10 @@ class VariantCreateAPIView(APIView):
             raise_exception=True,
         )
 
-        # -------------------------------------------------
-        # CREATE VARIANT
-        # -------------------------------------------------
-
         variant = VariantService.create_variant(
             user=request.user,
             validated_data=serializer.validated_data,
         )
-
-        # -------------------------------------------------
-        # RESPONSE
-        # -------------------------------------------------
 
         return Response(
             {

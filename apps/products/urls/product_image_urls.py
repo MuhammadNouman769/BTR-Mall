@@ -9,9 +9,9 @@ from apps.products.views.product_image.delete import ProductImageDeleteAPIView
 
 urlpatterns = [
 
-    path("",ProductImageListAPIView.as_view(),),
-    path("create/",ProductImageCreateAPIView.as_view(),),
-    path("<int:pk>/",ProductImageDetailAPIView.as_view(),),
-    path("<int:pk>/update/",ProductImageUpdateAPIView.as_view(),),
-    path("<int:pk>/delete/",ProductImageDeleteAPIView.as_view(),),
+    path("",ProductImageListAPIView.as_view(),name="product-image-list",),
+    path("create/",ProductImageCreateAPIView.as_view(),name="product-image-create",),
+    path("<int:pk>/",ProductImageDetailAPIView.as_view(),name="product-image-detail",),
+    path("<int:pk>/update/",ProductImageUpdateAPIView.as_view(),name="product-image-update",),
+    path("<int:pk>/delete/",ProductImageDeleteAPIView.as_view(),name="product-image-delete",),
 ]

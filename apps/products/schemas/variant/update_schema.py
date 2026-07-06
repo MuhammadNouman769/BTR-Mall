@@ -7,6 +7,10 @@ from apps.products.serializers.request.variant_request_serializers.variant_reque
     ProductVariantCreateSerializer,
 )
 
+from apps.products.serializers.response.variant_response_serializers.variant_response import (
+    ProductVariantDetailResponseSerializer,
+)
+
 
 variant_update_schema = extend_schema(
     tags=["Variants"],
@@ -22,25 +26,17 @@ Variant images are managed separately using the Variant Images API.
     request=ProductVariantCreateSerializer,
 
     responses={
-        200: {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "Variant updated successfully."
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-            },
-        },
+        200: ProductVariantDetailResponseSerializer,
     },
 
     examples=[
         OpenApiExample(
             name="Update Variant",
+
+            summary="Update Variant",
+
             request_only=True,
+
             value={
                 "product": 1,
                 "sku": "SKU-001",

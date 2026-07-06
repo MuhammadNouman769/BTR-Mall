@@ -1,35 +1,29 @@
+# apps/products/serializers/response/product_response_serializers/product_response.py
+
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 
-from apps.products.models import (
-    Product,
-    ProductImage,
-    ProductVariant,
-    ProductOption,
-    ProductOptionValue,
-    VariantImage,
-    Category,
-)
+from apps.products.models import Product
+
 from apps.products.serializers.response.option_response_serializers.option_response import (
-        ProductOptionResponseSerializer,
+    ProductOptionResponseSerializer,
 )
 from apps.products.serializers.response.product_image_response_serializers.product_image_response import (
-ProductImageResponseSerializer,
+    ProductImageResponseSerializer,
 )
 from apps.products.serializers.response.variant_response_serializers.variant_response import (
-ProductVariantResponseSerializer,
+    ProductVariantResponseSerializer,
 )
 from apps.products.serializers.response.categories_response_serializers.category_response import (
-CategorySerializer
+    CategorySerializer,
 )
+
 
 # =========================================================
 # PRODUCT LIST
 # =========================================================
 
-class ProductListResponseSerializer(
-    serializers.ModelSerializer
-):
+class ProductListResponseSerializer(serializers.ModelSerializer):
 
     main_image = serializers.SerializerMethodField()
 
@@ -43,21 +37,16 @@ class ProductListResponseSerializer(
             "title",
             "handle",
             "brand",
-
             "product_status",
-
             "main_image",
-
             "price",
-
             "average_rating",
-
             "total_reviews",
         ]
 
     @extend_schema_field(
         serializers.CharField(
-            allow_null=True
+            allow_null=True,
         )
     )
     def get_main_image(self, obj):
@@ -98,9 +87,7 @@ class ProductListResponseSerializer(
 # PRODUCT DETAIL
 # =========================================================
 
-class ProductDetailResponseSerializer(
-    serializers.ModelSerializer
-):
+class ProductDetailResponseSerializer(serializers.ModelSerializer):
 
     images = ProductImageResponseSerializer(
         many=True,
@@ -117,7 +104,7 @@ class ProductDetailResponseSerializer(
         read_only=True,
     )
 
-    categories = ProductVariantResponseSerializer(
+    categories = CategorySerializer(
         many=True,
         read_only=True,
     )
@@ -129,27 +116,33 @@ class ProductDetailResponseSerializer(
             "id",
             "title",
             "handle",
-
             "brand",
-
             "product_status",
-
             "description_html",
             "short_description",
-
             "images",
-
             "options",
-
             "variants",
-
             "categories",
-
             "average_rating",
-
             "total_reviews",
         ]
 
+
+# =========================================================
+# PRODUCT DETAIL RESPONSE
+# =========================================================
+
+class ProductDetailApiResponseSerializer(serializers.Serializer):
+
+    message = serializers.CharField()
+
+    data = ProductDetailResponseSerializer()
+
+
+# =========================================================
+# PRODUCT LIST PAGINATION
+# =========================================================
 
 class PaginatedProductResponseSerializer(serializers.Serializer):
 
@@ -166,3 +159,14 @@ class PaginatedProductResponseSerializer(serializers.Serializer):
     results = ProductListResponseSerializer(
         many=True,
     )
+
+
+# =========================================================
+# PRODUCT LIST RESPONSE
+# =========================================================
+
+class ProductListApiResponseSerializer(serializers.Serializer):
+
+    message = serializers.CharField()
+
+    data = PaginatedProductResponseSerializer()

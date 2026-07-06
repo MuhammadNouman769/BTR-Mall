@@ -41,8 +41,8 @@ class ProductValidator:
             })
 
         if (
-            user.shop.shop_status !=
-            ShopStatusChoices.APPROVED
+            user.shop.shop_status
+            != ShopStatusChoices.APPROVED
         ):
 
             raise ValidationError({
@@ -56,7 +56,14 @@ class ProductValidator:
     # =====================================================
 
     @staticmethod
-    def validate_owner(product, user):
+    def validate_owner(
+        product,
+        user,
+    ):
+
+        ProductValidator.validate_seller(
+            user,
+        )
 
         if product.shop != user.shop:
 
@@ -69,7 +76,9 @@ class ProductValidator:
     # =====================================================
 
     @staticmethod
-    def validate_categories(categories):
+    def validate_categories(
+        categories,
+    ):
 
         if not categories:
             return
@@ -77,7 +86,7 @@ class ProductValidator:
         ids = [cat.id for cat in categories]
 
         db_categories = Category.objects.filter(
-            id__in=ids
+            id__in=ids,
         )
 
         if db_categories.count() != len(ids):
@@ -89,11 +98,48 @@ class ProductValidator:
             })
 
     # =====================================================
-    # VALIDATE UPDATE
+    # CREATE VALIDATION
     # =====================================================
 
     @staticmethod
-    def validate_update(instance):
+    def validate_create(
+        user,
+        validated_data,
+    ):
+
+        ProductValidator.validate_seller(
+            user,
+        )
+
+        ProductValidator.validate_categories(
+            validated_data.get(
+                "categories",
+                [],
+            )
+        )
+
+    # =====================================================
+    # UPDATE VALIDATION
+    # =====================================================
+
+    @staticmethod
+    def validate_update(
+        user,
+        instance,
+        validated_data,
+    ):
+
+        ProductValidator.validate_owner(
+            product=instance,
+            user=user,
+        )
+
+        ProductValidator.validate_categories(
+            validated_data.get(
+                "categories",
+                [],
+            )
+        )
 
         if instance.product_status in [
 
@@ -110,17 +156,20 @@ class ProductValidator:
             })
 
     # =====================================================
-    # DETERMINE STATUS
+    # DETERMINE PRODUCT STATUS
     # =====================================================
 
     @staticmethod
-    def determine_status(shop, variants):
+    def determine_status(
+        shop,
+        variants,
+    ):
 
         total_stock = sum(
 
             variant.get(
                 "stock_quantity",
-                0
+                0,
             )
 
             for variant in variants

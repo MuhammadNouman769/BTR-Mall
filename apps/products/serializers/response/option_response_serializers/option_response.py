@@ -17,11 +17,6 @@ class ProductOptionResponseSerializer(serializers.ModelSerializer):
         fields = ["id", "product", "name", "position", "values"]
 
 
-
-
-
-
-
 class ProductOptionListResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
     data = ProductOptionResponseSerializer(many=True)

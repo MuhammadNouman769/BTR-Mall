@@ -34,7 +34,6 @@ class ProductOptionRequestSerializer(serializers.Serializer):
 
 
 
-
 # =========================================================
 # PRODUCT CREATE
 # =========================================================
@@ -54,6 +53,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
     variants = ProductVariantCreateSerializer(
         many=True,
+        required=True,
     )
 
     class Meta:
@@ -100,13 +100,13 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         if len(value) < 3:
 
             raise serializers.ValidationError(
-                "Product title is too short"
+                "Product title is too short."
             )
 
         return value
 
     # =====================================================
-    # CATEGORY
+    # CATEGORIES
     # =====================================================
 
     def validate_categories(self, value):
@@ -116,7 +116,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         if len(ids) != len(set(ids)):
 
             raise serializers.ValidationError(
-                "Duplicate categories are not allowed"
+                "Duplicate categories are not allowed."
             )
 
         return value
@@ -130,7 +130,28 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         if not value:
 
             raise serializers.ValidationError(
-                "At least one variant is required"
+                "At least one variant is required."
             )
 
         return value
+
+class ProductCreateSwaggerSerializer(serializers.Serializer):
+
+    title = serializers.CharField()
+
+    categories = serializers.CharField(
+        help_text='Example: [1,2]'
+    )
+
+    options = serializers.CharField(
+        help_text='JSON String'
+    )
+
+    variants = serializers.CharField(
+        help_text='JSON String'
+    )
+
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        required=False
+    )
