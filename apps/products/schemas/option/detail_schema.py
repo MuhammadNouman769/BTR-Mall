@@ -1,10 +1,23 @@
 from drf_spectacular.utils import extend_schema
-from apps.products.serializers.response.option_response_serializers.option_response import ProductOptionResponseSerializer
+
+from apps.products.serializers.response.option_response_serializers.option_response import (
+    ProductOptionDetailResponseSerializer,
+)
 
 
 option_detail_schema = extend_schema(
+
     operation_id="option_detail",
-    responses=ProductOptionResponseSerializer,
+
+    tags=["Options"],
+
     summary="Option Detail",
-    description="Get single product option with values"
+
+    description="""
+Retrieve details of a single product option along with all of its values.
+""",
+
+    responses={
+        200: ProductOptionDetailResponseSerializer,
+    },
 )

@@ -1,14 +1,8 @@
-# apps/products/services/option_service.py
-
 from django.db import transaction
 
 from apps.products.models import (
     ProductOption,
     ProductOptionValue,
-)
-
-from apps.products.validators.product_validator import (
-    ProductValidator,
 )
 
 from apps.products.validators.option_validator import (
@@ -19,46 +13,49 @@ from apps.products.validators.option_validator import (
 class ProductOptionService:
 
     # =====================================================
-    # CREATE OPTION
+    # CREATE
     # =====================================================
+
     @staticmethod
     @transaction.atomic
-    def create_option(user, validated_data):
+    def create_option(
+        user,
+        validated_data,
+    ):
 
-        values = validated_data.pop("values", [])
-
-        product = validated_data.get("product")
-
-        ProductValidator.validate_owner(
-            product,
+        OptionValidator.validate_create(
             user,
+            validated_data,
         )
 
-        OptionValidator.validate_values(
-            values
+        values = validated_data.pop(
+            "values",
         )
 
         option = ProductOption.objects.create(
-            **validated_data
+            **validated_data,
         )
 
-        ProductOptionValue.objects.bulk_create([
-            ProductOptionValue(
-                option=option,
-                value=value["value"].strip(),
-                position=value.get(
-                    "position",
-                    index + 1,
-                ),
-            )
-            for index, value in enumerate(values)
-        ])
+        ProductOptionValue.objects.bulk_create(
+            [
+                ProductOptionValue(
+                    option=option,
+                    value=value["value"].strip(),
+                    position=value.get(
+                        "position",
+                        index + 1,
+                    ),
+                )
+                for index, value in enumerate(values)
+            ]
+        )
 
         return option
 
     # =====================================================
-    # UPDATE OPTION
+    # UPDATE
     # =====================================================
+
     @staticmethod
     @transaction.atomic
     def update_option(
@@ -67,14 +64,15 @@ class ProductOptionService:
         validated_data,
     ):
 
+        OptionValidator.validate_update(
+            user,
+            instance,
+            validated_data,
+        )
+
         values = validated_data.pop(
             "values",
             None,
-        )
-
-        ProductValidator.validate_owner(
-            instance.product,
-            user,
         )
 
         for attr, value in validated_data.items():
@@ -89,29 +87,28 @@ class ProductOptionService:
 
         if values is not None:
 
-            OptionValidator.validate_values(
-                values
-            )
-
             instance.values.all().delete()
 
-            ProductOptionValue.objects.bulk_create([
-                ProductOptionValue(
-                    option=instance,
-                    value=value["value"].strip(),
-                    position=value.get(
-                        "position",
-                        index + 1,
-                    ),
-                )
-                for index, value in enumerate(values)
-            ])
+            ProductOptionValue.objects.bulk_create(
+                [
+                    ProductOptionValue(
+                        option=instance,
+                        value=value["value"].strip(),
+                        position=value.get(
+                            "position",
+                            index + 1,
+                        ),
+                    )
+                    for index, value in enumerate(values)
+                ]
+            )
 
         return instance
 
     # =====================================================
-    # DELETE OPTION
+    # DELETE
     # =====================================================
+
     @staticmethod
     @transaction.atomic
     def delete_option(
@@ -119,9 +116,10 @@ class ProductOptionService:
         instance,
     ):
 
-        ProductValidator.validate_owner(
-            instance.product,
+        OptionValidator.validate_update(
             user,
+            instance,
+            {},
         )
 
         instance.delete()
